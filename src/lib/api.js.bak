@@ -1,0 +1,456 @@
+// ─── Mock Data ───────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { id: "c1",  slug: "ac-repair",       label: "AC Repair",        icon: "❄️",  image_url: "https://images.unsplash.com/photo-1631083211623-41e64ce3f74b?w=400&q=80" },
+  { id: "c2",  slug: "cleaning",        label: "Cleaning",         icon: "🧹",  image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" },
+  { id: "c3",  slug: "beauty",          label: "Beauty & Spa",     icon: "💆",  image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80" },
+  { id: "c4",  slug: "electrical",      label: "Electrical",       icon: "⚡",  image_url: "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&q=80" },
+  { id: "c5",  slug: "plumbing",        label: "Plumbing",         icon: "🔧",  image_url: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&q=80" },
+  { id: "c6",  slug: "painting",        label: "Painting",         icon: "🎨",  image_url: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=400&q=80" },
+  { id: "c7",  slug: "appliance",       label: "Appliance Repair", icon: "🏠",  image_url: "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&q=80" },
+  { id: "c8",  slug: "carpentry",       label: "Carpentry",        icon: "🪚",  image_url: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&q=80" },
+  { id: "c9",  slug: "pest-control",    label: "Pest Control",     icon: "🐛",  image_url: "https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=400&q=80" },
+  { id: "c10", slug: "car-wash",        label: "Car Wash",         icon: "🚗",  image_url: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=400&q=80" },
+  { id: "c11", slug: "gardening",       label: "Gardening",        icon: "🌿",  image_url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80" },
+  { id: "c12", slug: "laptop-repair",   label: "Laptop Repair",    icon: "💻",  image_url: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&q=80" },
+  { id: "c13", slug: "security",        label: "Security & CCTV",  icon: "📷",  image_url: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=400&q=80" },
+  { id: "c14", slug: "moving",          label: "Moving & Shifting", icon: "📦", image_url: "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=400&q=80" },
+  { id: "c15", slug: "men-grooming",    label: "Men's Grooming",   icon: "💈",  image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80" },
+  { id: "c16", slug: "water-heater",    label: "Water Heater",     icon: "🌡️", image_url: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80" },
+];
+
+const SERVICES = [
+  // ── AC Repair (c1) ──
+  {
+    id: "s1", category_id: "c1",
+    title: "AC General Servicing", subtitle: "Deep clean + gas check",
+    icon: "❄️",
+    image_url: "https://images.unsplash.com/photo-1631083211623-41e64ce3f74b?w=800&q=80",
+    price: 800, rating: 4.8, review_count: 3241, duration: "1–2 hrs",
+    is_popular: true,
+    description: "Professional AC servicing including coil cleaning, filter wash, gas pressure check and performance tuning. Keeps your AC running at peak efficiency.",
+    includes: ["Coil cleaning", "Filter wash & dry", "Gas pressure check", "Drain pipe cleaning", "Performance report"],
+    faq: [
+      { q: "How long does it take?", a: "Usually 1–2 hours depending on AC type." },
+      { q: "Do I need to provide anything?", a: "Just ensure power access and a water point nearby." },
+    ],
+  },
+  {
+    id: "s1b", category_id: "c1",
+    title: "AC Gas Refill", subtitle: "R22 & R410A refrigerant",
+    icon: "❄️",
+    image_url: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&q=80",
+    price: 1200, rating: 4.7, review_count: 1830, duration: "1 hr",
+    is_popular: false,
+    description: "Refrigerant refill for all AC brands. Includes leak detection and pressure test before and after filling.",
+    includes: ["Leak detection", "Pressure test", "Gas refill (R22/R410A)", "Post-fill performance check"],
+    faq: [{ q: "Which gas types do you support?", a: "We support R22, R32, and R410A refrigerants." }],
+  },
+
+  // ── Cleaning (c2) ──
+  {
+    id: "s2", category_id: "c2",
+    title: "Home Deep Cleaning", subtitle: "Full apartment top to bottom",
+    icon: "🧹",
+    image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+    price: 1200, rating: 4.7, review_count: 5820, duration: "3–5 hrs",
+    is_popular: true,
+    description: "Comprehensive deep clean of your entire home. Our trained team uses professional-grade equipment and eco-friendly products.",
+    includes: ["Kitchen degreasing", "Bathroom sanitization", "Floor mopping", "Window wiping", "Ceiling fan dusting"],
+    faq: [
+      { q: "Will you bring cleaning supplies?", a: "Yes, all supplies included." },
+      { q: "How many cleaners come?", a: "2–3 cleaners depending on apartment size." },
+    ],
+  },
+  {
+    id: "s11", category_id: "c2",
+    title: "Kitchen Deep Cleaning", subtitle: "Grease, grime, odour — gone",
+    icon: "🍳",
+    image_url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80",
+    price: 900, rating: 4.8, review_count: 2200, duration: "2–3 hrs",
+    is_popular: true,
+    description: "Intensive kitchen cleaning: chimney, stove, tiles, sink, and all surfaces thoroughly degreased.",
+    includes: ["Chimney cleaning", "Stove degreasing", "Tile scrubbing", "Sink sanitization", "Shelf wipe"],
+    faq: [],
+  },
+  {
+    id: "s2c", category_id: "c2",
+    title: "Sofa & Upholstery Cleaning", subtitle: "Steam + shampoo treatment",
+    icon: "🛋️",
+    image_url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",
+    price: 650, rating: 4.6, review_count: 1420, duration: "1–2 hrs",
+    is_popular: false,
+    description: "Professional sofa and upholstery cleaning using hot-water extraction and fabric-safe shampoo. Removes stains, odours, and allergens.",
+    includes: ["Vacuuming", "Shampoo treatment", "Steam extraction", "Deodorizing", "Quick-dry process"],
+    faq: [{ q: "Is it safe for leather sofas?", a: "We use specific leather-safe products for leather upholstery." }],
+  },
+
+  // ── Beauty & Spa (c3) ──
+  {
+    id: "s3", category_id: "c3",
+    title: "Facial & Cleanup", subtitle: "Parlour-grade at home",
+    icon: "💆",
+    image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80",
+    price: 600, rating: 4.9, review_count: 2100, duration: "45–60 min",
+    is_popular: true,
+    description: "Professional facial treatment with skin analysis, cleansing, exfoliation, steam, extraction and mask — all at your doorstep.",
+    includes: ["Skin analysis", "Deep cleansing", "Exfoliation", "Steam therapy", "Face mask", "Toning & moisturizing"],
+    faq: [{ q: "Are products hygienic?", a: "Yes, single-use products for each customer." }],
+  },
+  {
+    id: "s3b", category_id: "c3",
+    title: "Full Body Massage", subtitle: "Swedish & deep tissue",
+    icon: "💆",
+    image_url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80",
+    price: 1000, rating: 4.8, review_count: 980, duration: "60–90 min",
+    is_popular: false,
+    description: "Relaxing full-body massage by certified therapists at your home. Choose from Swedish, deep tissue, or aromatherapy styles.",
+    includes: ["Consultation", "Full-body massage", "Aromatherapy oil", "Hot towel finish"],
+    faq: [{ q: "Do I need to provide a massage table?", a: "Our therapist brings a portable table." }],
+  },
+  {
+    id: "s3c", category_id: "c3",
+    title: "Bridal Makeup", subtitle: "Full glam, 6-hr stay",
+    icon: "💄",
+    image_url: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=80",
+    price: 5000, rating: 4.9, review_count: 620, duration: "2–3 hrs",
+    is_popular: false,
+    description: "Professional bridal makeup by experienced artists. Includes trial session, skin prep, and touch-up kit for the day.",
+    includes: ["Skin prep & primer", "HD foundation", "Eye & lip work", "Setting spray", "Touch-up kit"],
+    faq: [{ q: "Is a trial included?", a: "Yes, a pre-wedding trial session is included in the package." }],
+  },
+
+  // ── Electrical (c4) ──
+  {
+    id: "s4", category_id: "c4",
+    title: "Electrical Wiring & Repair", subtitle: "Fan, switch, socket, DB",
+    icon: "⚡",
+    image_url: "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800&q=80",
+    price: 500, rating: 4.6, review_count: 1890, duration: "1–3 hrs",
+    is_popular: false,
+    description: "Licensed electrician for all wiring needs — from socket replacement to complete rewiring.",
+    includes: ["Socket/switch replacement", "Fan installation", "MCB/DB work", "Light fitting", "Safety inspection"],
+    faq: [{ q: "Is the electrician certified?", a: "Yes, all our electricians are BTEB certified." }],
+  },
+
+  // ── Plumbing (c5) ──
+  {
+    id: "s5", category_id: "c5",
+    title: "Plumbing Repair", subtitle: "Pipe, tap, commode, tank",
+    icon: "🔧",
+    image_url: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80",
+    price: 450, rating: 4.5, review_count: 2300, duration: "1–2 hrs",
+    is_popular: true,
+    description: "Expert plumber for leaks, blockages, tap replacements, and water tank issues.",
+    includes: ["Leak detection & repair", "Tap replacement", "Commode repair", "Pipe fitting", "Water tank cleaning"],
+    faq: [],
+  },
+
+  // ── Painting (c6) ──
+  {
+    id: "s6", category_id: "c6",
+    title: "Wall Painting (Per Room)", subtitle: "2 coats, all materials",
+    icon: "🎨",
+    image_url: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80",
+    price: 2500, rating: 4.7, review_count: 980, duration: "1 day",
+    is_popular: false,
+    description: "Professional painters with 2 coats of premium paint. All prep work and materials included.",
+    includes: ["Wall prep & putty", "2 coats paint", "Materials included", "Cleanup after job", "Color consultation"],
+    faq: [{ q: "Can I choose the color?", a: "Absolutely! We'll help you pick the right shade." }],
+  },
+
+  // ── Appliance Repair (c7) ──
+  {
+    id: "s7", category_id: "c7",
+    title: "Washing Machine Repair", subtitle: "All brands, on-site fix",
+    icon: "🏠",
+    image_url: "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800&q=80",
+    price: 700, rating: 4.6, review_count: 1450, duration: "1–2 hrs",
+    is_popular: false,
+    description: "On-site diagnosis and repair for all washing machine brands and models.",
+    includes: ["Free diagnosis", "Motor check", "Belt/pump repair", "Control board check", "Test wash"],
+    faq: [],
+  },
+  {
+    id: "s7b", category_id: "c7",
+    title: "Refrigerator Repair", subtitle: "Cooling & compressor issues",
+    icon: "🧊",
+    image_url: "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=800&q=80",
+    price: 750, rating: 4.5, review_count: 1100, duration: "1–2 hrs",
+    is_popular: false,
+    description: "Expert fridge repair for all brands — compressor, thermostat, door seals, and gas issues.",
+    includes: ["Diagnosis", "Compressor check", "Gas refill if needed", "Thermostat repair", "Seal replacement"],
+    faq: [],
+  },
+
+  // ── Carpentry (c8) ──
+  {
+    id: "s8", category_id: "c8",
+    title: "Furniture Assembly", subtitle: "IKEA, local & custom",
+    icon: "🪚",
+    image_url: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80",
+    price: 400, rating: 4.5, review_count: 760, duration: "1–3 hrs",
+    is_popular: false,
+    description: "Professional assembly of all types of flat-pack or custom furniture.",
+    includes: ["All tools provided", "Careful handling", "Wall mounting", "Level & alignment check"],
+    faq: [],
+  },
+
+  // ── Pest Control (c9) ──
+  {
+    id: "s9", category_id: "c9",
+    title: "Pest Control (Apartment)", subtitle: "Cockroach, rat, termite",
+    icon: "🐛",
+    image_url: "https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=800&q=80",
+    price: 1500, rating: 4.4, review_count: 1120, duration: "1–2 hrs",
+    is_popular: false,
+    description: "Comprehensive pest treatment using WHO-approved chemicals. Safe for family and pets after 2 hours.",
+    includes: ["Cockroach treatment", "Rat baiting", "Mosquito spray", "Termite check", "30-day guarantee"],
+    faq: [{ q: "Is it safe for kids?", a: "Yes, safe after 2 hours of ventilation." }],
+  },
+
+  // ── Car Wash (c10) ──
+  {
+    id: "s10", category_id: "c10",
+    title: "Car Exterior Wash", subtitle: "At your parking spot",
+    icon: "🚗",
+    image_url: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&q=80",
+    price: 350, rating: 4.3, review_count: 890, duration: "45 min",
+    is_popular: false,
+    description: "Full exterior hand wash, rinse, wipe and tyre clean — right at your building.",
+    includes: ["Exterior hand wash", "Tyre cleaning", "Glass wiping", "Mirror cleaning"],
+    faq: [],
+  },
+  {
+    id: "s10b", category_id: "c10",
+    title: "Car Interior + Exterior Detail", subtitle: "Full valet at home",
+    icon: "🚗",
+    image_url: "https://images.unsplash.com/photo-1507136566006-cfc505b114fc?w=800&q=80",
+    price: 1200, rating: 4.7, review_count: 540, duration: "2–3 hrs",
+    is_popular: false,
+    description: "Premium full-car detailing including interior vacuum, dashboard wipe, seat shampooing, and exterior polish.",
+    includes: ["Interior vacuum", "Dashboard clean", "Seat shampoo", "Exterior wash & polish", "Tyre shine"],
+    faq: [],
+  },
+
+  // ── Gardening (c11) ──
+  {
+    id: "s11g", category_id: "c11",
+    title: "Garden Maintenance", subtitle: "Trimming, watering & care",
+    icon: "🌿",
+    image_url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80",
+    price: 800, rating: 4.6, review_count: 430, duration: "2–3 hrs",
+    is_popular: false,
+    description: "Professional gardener for trimming, pruning, planting and general care of your home garden or rooftop.",
+    includes: ["Plant trimming", "Pruning", "Fertilization advice", "Watering setup", "Debris cleanup"],
+    faq: [],
+  },
+
+  // ── Laptop Repair (c12) ──
+  {
+    id: "s12", category_id: "c12",
+    title: "Laptop Repair & Service", subtitle: "Hardware & software fix",
+    icon: "💻",
+    image_url: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80",
+    price: 600, rating: 4.5, review_count: 1300, duration: "1–3 hrs",
+    is_popular: false,
+    description: "Certified technician for laptop screen, battery, keyboard, OS issues and performance tuning.",
+    includes: ["Diagnosis report", "OS reinstall", "Virus removal", "Hardware repair", "Data backup"],
+    faq: [{ q: "What brands do you support?", a: "All major brands: Dell, HP, Lenovo, Asus, Apple." }],
+  },
+
+  // ── Security & CCTV (c13) — NEW ──
+  {
+    id: "s13", category_id: "c13",
+    title: "CCTV Camera Installation", subtitle: "HD cameras + DVR setup",
+    icon: "📷",
+    image_url: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&q=80",
+    price: 3500, rating: 4.8, review_count: 760, duration: "2–4 hrs",
+    is_popular: true,
+    description: "Professional CCTV installation for homes and offices. Includes camera placement, DVR/NVR setup, mobile app configuration, and cable routing.",
+    includes: ["Site survey", "Camera mounting", "DVR/NVR setup", "Mobile app config", "1-yr warranty"],
+    faq: [
+      { q: "How many cameras are included?", a: "Package supports 2, 4, or 8 cameras — choose your plan." },
+      { q: "Can I view remotely?", a: "Yes, we configure remote access on your phone." },
+    ],
+  },
+  {
+    id: "s13b", category_id: "c13",
+    title: "Smart Door Lock Installation", subtitle: "Fingerprint & PIN",
+    icon: "🔐",
+    image_url: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&q=80",
+    price: 1800, rating: 4.7, review_count: 340, duration: "1–2 hrs",
+    is_popular: false,
+    description: "Install and configure smart door locks with fingerprint, PIN, or app-based access for your home or office.",
+    includes: ["Lock installation", "Fingerprint enrolment", "App setup", "Key fob config", "Demo & training"],
+    faq: [],
+  },
+
+  // ── Moving & Shifting (c14) — NEW ──
+  {
+    id: "s14", category_id: "c14",
+    title: "Home Shifting Service", subtitle: "Packing + truck + unboxing",
+    icon: "📦",
+    image_url: "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=800&q=80",
+    price: 5000, rating: 4.5, review_count: 890, duration: "Half day",
+    is_popular: true,
+    description: "End-to-end home relocation — packing, loading, transport, and unpacking at your new address. Careful handling guaranteed.",
+    includes: ["Packing materials", "Furniture dismantling", "Loading & transport", "Unpacking & reassembly", "Insurance cover"],
+    faq: [
+      { q: "What areas do you cover?", a: "All areas within Dhaka city and Dhaka-Chattogram corridor." },
+      { q: "Is my furniture insured?", a: "Yes, basic transit insurance is included." },
+    ],
+  },
+  {
+    id: "s14b", category_id: "c14",
+    title: "Office Relocation", subtitle: "Desks, servers & equipment",
+    icon: "🏢",
+    image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",
+    price: 12000, rating: 4.6, review_count: 210, duration: "Full day",
+    is_popular: false,
+    description: "Professional office moving service for SMEs. Handles furniture, IT equipment, server racks, and documents with care.",
+    includes: ["IT equipment packing", "Server safe-transport", "Furniture move", "Document handling", "Setup at new office"],
+    faq: [],
+  },
+
+  // ── Men's Grooming (c15) — NEW ──
+  {
+    id: "s15", category_id: "c15",
+    title: "Haircut at Home (Men)", subtitle: "Salon-style, your doorstep",
+    icon: "💈",
+    image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80",
+    price: 300, rating: 4.7, review_count: 2890, duration: "30–45 min",
+    is_popular: true,
+    description: "Professional barber at your doorstep. Includes haircut, beard trim, and hot towel finish.",
+    includes: ["Haircut", "Beard trim & shape", "Hot towel", "Hair styling", "Cleanup"],
+    faq: [{ q: "Do I need to provide anything?", a: "Just a chair and mirror. We bring all tools." }],
+  },
+  {
+    id: "s15b", category_id: "c15",
+    title: "Shave & Beard Grooming", subtitle: "Classic straight-razor shave",
+    icon: "🪒",
+    image_url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&q=80",
+    price: 200, rating: 4.8, review_count: 1560, duration: "20–30 min",
+    is_popular: false,
+    description: "Classic hot-towel shave and professional beard grooming by an expert barber at your home.",
+    includes: ["Hot towel prep", "Straight-razor shave", "Beard trim", "Aftershave lotion", "Moisturizer"],
+    faq: [],
+  },
+
+  // ── Water Heater (c16) — NEW ──
+  {
+    id: "s16", category_id: "c16",
+    title: "Water Heater Repair", subtitle: "Geyser & instant heater",
+    icon: "🌡️",
+    image_url: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&q=80",
+    price: 600, rating: 4.5, review_count: 870, duration: "1–2 hrs",
+    is_popular: false,
+    description: "Repair and service for all geyser and instant water heater brands. Includes element, thermostat, and safety valve checks.",
+    includes: ["Diagnosis", "Element check/replace", "Thermostat check", "Safety valve test", "Leak fix"],
+    faq: [],
+  },
+  {
+    id: "s16b", category_id: "c16",
+    title: "Water Heater Installation", subtitle: "New unit, full setup",
+    icon: "🛁",
+    image_url: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&q=80",
+    price: 900, rating: 4.7, review_count: 460, duration: "1–2 hrs",
+    is_popular: false,
+    description: "Professional installation of any new water heater — geyser, instant, or solar. Includes plumbing and electrical hookup.",
+    includes: ["Unit mounting", "Plumbing connection", "Electrical wiring", "Test run", "Safety briefing"],
+    faq: [],
+  },
+];
+
+const REVIEWS = {
+  s1: [
+    { id: "r1", rating: 5, comment: "AC works like new. Very professional team.", created_at: "2025-03-10" },
+    { id: "r2", rating: 4, comment: "Came on time, did a thorough job.", created_at: "2025-02-28" },
+  ],
+  s2: [
+    { id: "r3", rating: 5, comment: "My apartment has never been this clean!", created_at: "2025-04-01" },
+    { id: "r4", rating: 5, comment: "Excellent team, very detail-oriented.", created_at: "2025-03-22" },
+  ],
+  s13: [
+    { id: "r5", rating: 5, comment: "Fast installation, app works perfectly.", created_at: "2025-04-10" },
+    { id: "r6", rating: 4, comment: "Good service, cameras are very clear.", created_at: "2025-03-15" },
+  ],
+  s14: [
+    { id: "r7", rating: 5, comment: "Zero damage, very professional team.", created_at: "2025-04-05" },
+  ],
+  s15: [
+    { id: "r8", rating: 5, comment: "Best haircut I've had in a while. So convenient!", created_at: "2025-04-12" },
+    { id: "r9", rating: 5, comment: "Barber was skilled and quick.", created_at: "2025-03-28" },
+  ],
+};
+
+const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
+
+// ─── API Functions ────────────────────────────────────────────────────────────
+
+export async function fetchCategories() {
+  await delay();
+  return CATEGORIES;
+}
+
+export async function fetchServices({ popular, categorySlug } = {}) {
+  await delay();
+  let svcs = [...SERVICES];
+  if (categorySlug) {
+    const cat = CATEGORIES.find((c) => c.slug === categorySlug);
+    if (cat) svcs = svcs.filter((s) => s.category_id === cat.id);
+  }
+  if (popular) svcs = svcs.filter((s) => s.is_popular);
+  return svcs;
+}
+
+export async function fetchServiceById(id) {
+  await delay();
+  return SERVICES.find((s) => s.id === id) ?? null;
+}
+
+export async function fetchServiceReviews(serviceId) {
+  await delay();
+  return REVIEWS[serviceId] ?? [];
+}
+
+export async function validatePromoCode(code) {
+  await delay(600);
+  const PROMOS = {
+    WELCOME20: { type: "percent", value: 20 },
+    FLAT100:   { type: "flat",    value: 100 },
+    SAVE50:    { type: "flat",    value: 50  },
+  };
+  return PROMOS[code] ? PROMOS[code] : { error: "Invalid or expired promo code" };
+}
+
+export async function createBooking(data) {
+  await delay(800);
+  const bookings = JSON.parse(localStorage.getItem("servico_bookings") || "[]");
+  const newBooking = {
+    ...data,
+    id: "b" + Date.now(),
+    created_at: new Date().toISOString(),
+    service: SERVICES.find((s) => s.id === data.service_id),
+  };
+  bookings.unshift(newBooking);
+  localStorage.setItem("servico_bookings", JSON.stringify(bookings));
+  return { error: null, booking: newBooking };
+}
+
+export async function fetchUserBookings() {
+  await delay(400);
+  return JSON.parse(localStorage.getItem("servico_bookings") || "[]");
+}
+
+export async function submitProviderApplication(data) {
+  await delay(800);
+  console.log("Provider application:", data);
+  return { error: null };
+}
+
+export async function apiForgotPassword(email) {
+  await delay(600);
+  console.log("Password reset for:", email);
+  return { error: null };
+}
