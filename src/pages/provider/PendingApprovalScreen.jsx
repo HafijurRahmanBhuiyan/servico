@@ -11,9 +11,9 @@ export default function PendingApprovalScreen() {
         <div className="text-8xl">❌</div>
         <h1 className="mt-5 text-2xl font-bold text-gray-900">Application Not Approved</h1>
         <p className="mt-2 text-gray-500">Unfortunately your application wasn't approved at this time.</p>
-        {providerApplication?.rejection_reason && (
+        {providerApplication?.reject_reason && (
           <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-            Reason: {providerApplication.rejection_reason}
+            Reason: {providerApplication.reject_reason}
           </div>
         )}
         <div className="mt-8 flex items-center justify-center gap-4">

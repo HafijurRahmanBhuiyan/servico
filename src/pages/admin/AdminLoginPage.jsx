@@ -19,12 +19,17 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await signIn(email, password);
-    setLoading(false);
-    if (res.role === "admin") {
-      navigate("/admin", { replace: true });
-    } else {
-      setError("Invalid admin credentials");
+    try {
+      const res = await signIn(email, password);
+      if (res?.error) {
+        setError(res.error);
+        setLoading(false);
+        return;
+      }
+      window.location.href = "/admin";
+    } catch (err) {
+      setError("Network error — is the backend running?");
+      setLoading(false);
     }
   };
 

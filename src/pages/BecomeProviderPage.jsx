@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 const SKILLS = ["AC Repair & Servicing","Plumbing","Electrical Work","Home Cleaning","Beauty & Spa","Painting","Carpentry","Car Wash","Appliance Repair","Pest Control","Gardening","Laptop / Computer Repair"];
 
 export default function BecomeProviderPage() {
-  const { user } = useAuth();
+  const { user, refreshProviderApp } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", nid: "", address: "", experience_years: "1", skills: [], bio: "", availability: "full_time" });
+  const [nidFile, setNidFile] = useState(null);
 
   const toggleSkill = (s) =>
     setForm((f) => ({ ...f, skills: f.skills.includes(s) ? f.skills.filter((x) => x !== s) : [...f.skills, s] }));
@@ -21,8 +22,9 @@ export default function BecomeProviderPage() {
     if (form.skills.length === 0) { alert("Select at least one skill."); return; }
     if (!user) { navigate("/login?redirect=/become-provider"); return; }
     setSubmitting(true);
-    await submitProviderApplication({ userId: user.id, ...form });
+    await submitProviderApplication({ userId: user.id, ...form, nid_file: nidFile });
     setSubmitting(false);
+    refreshProviderApp();
     navigate("/provider/dashboard");
   };
 
@@ -65,6 +67,15 @@ export default function BecomeProviderPage() {
               <label className="mb-1 block text-sm font-medium">NID number</label>
               <input required value={form.nid} onChange={(e) => setForm({ ...form, nid: e.target.value })} className="input-field" />
             </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Upload NID <span className="text-gray-400">(PDF)</span></label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-600 hover:border-emerald-300">
+                <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setNidFile(e.target.files[0] || null)} />
+                {nidFile ? nidFile.name : "Choose PDF file"}
+              </label>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Years of experience</label>
               <select value={form.experience_years} onChange={(e) => setForm({ ...form, experience_years: e.target.value })} className="input-field">

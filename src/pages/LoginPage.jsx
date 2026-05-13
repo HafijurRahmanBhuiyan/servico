@@ -16,11 +16,17 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const { error: err, role } = await signIn(email, password);
-    setLoading(false);
-    if (err) { setError(err); return; }
-    if (role === "admin") { navigate("/admin"); return; }
-    navigate(redirect);
+    try {
+      const { error: err, role } = await signIn(email, password);
+      setLoading(false);
+      if (err) { setError(err); return; }
+      if (role === "admin") { navigate("/admin"); return; }
+      if (role === "provider") { navigate("/provider/dashboard"); return; }
+      navigate(redirect);
+    } catch {
+      setError("Network error — is the backend running?");
+      setLoading(false);
+    }
   };
 
   return (

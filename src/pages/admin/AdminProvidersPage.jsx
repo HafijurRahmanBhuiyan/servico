@@ -140,6 +140,7 @@ export default function AdminProvidersPage() {
                   <span>Experience: {app.experience_years} years</span>
                   <span>Availability: {app.availability}</span>
                   <span>Area: {app.address}</span>
+                  <span>NID: {app.nid_number}</span>
                 </div>
 
                 {app.bio && (
@@ -156,9 +157,13 @@ export default function AdminProvidersPage() {
                       <button onClick={() => setRejectId(app.id)} className="rounded-lg border border-red-300 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50">
                         Reject
                       </button>
-                      <button onClick={() => alert("NID document viewer coming soon")} className="text-xs font-medium text-primary underline">
-                        View NID
-                      </button>
+                      {app.nid_file ? (
+                        <a href={app.nid_file} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary underline">
+                          View NID
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-400">No NID file</span>
+                      )}
                     </>
                   )}
                   {tab === "Approved" && (

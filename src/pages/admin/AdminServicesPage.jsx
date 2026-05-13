@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, X, Star } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
-import { fetchServices, fetchCategories, SERVICES } from "@/lib/api";
+import { fetchServices, fetchCategories } from "@/lib/api";
 
 let nextServiceId = 100;
 

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Calendar, Clock, MapPin, Phone, Zap, Tag } from "lucide-react";
-import { fetchServiceById, validatePromoCode, createBooking } from "@/lib/api";
+import { Calendar, Clock, MapPin, Phone, Zap } from "lucide-react";
+import { fetchServiceById, createBooking } from "@/lib/api";
 import { formatPrice, cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -19,9 +19,6 @@ export default function BookingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(null);
-  const [checkingPromo, setCheckingPromo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     customer_name: "", phone: "", address: "", notes: "",
@@ -35,35 +32,25 @@ export default function BookingPage() {
     if (user) setForm((f) => ({ ...f, customer_name: user.name }));
   }, [id, user, navigate]);
 
-  const applyPromo = async () => {
-    if (!promoCode.trim()) return;
-    setCheckingPromo(true);
-    const result = await validatePromoCode(promoCode.toUpperCase());
-    setCheckingPromo(false);
-    if (result.error || !result.type) { alert(result.error ?? "Invalid promo code"); return; }
-    setPromoApplied({ code: promoCode.toUpperCase(), ...result });
-  };
-
   if (!service) return <div className="flex min-h-[50vh] items-center justify-center text-sm text-gray-400">Loading...</div>;
 
+  const price = Number(service.price);
   const visiting = 150;
   const urgentFee = form.is_urgent ? 100 : 0;
-  const subtotal = service.price + visiting + urgentFee;
-  const promoDiscount = promoApplied
-    ? promoApplied.type === "percent" ? Math.round((subtotal * promoApplied.value) / 100) : Math.min(promoApplied.value, subtotal)
-    : 0;
-  const vat = Math.round((subtotal - promoDiscount) * 0.05);
-  const total = subtotal - promoDiscount + vat;
+  const subtotal = price + visiting + urgentFee;
+  const vat = Math.round(subtotal * 0.05);
+  const total = subtotal + vat;
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     const { error } = await createBooking({
-      customer_id: user.id, service_id: service.id, status: "pending",
+      service: service.id,
       ...form,
-      service_charge: service.price, visiting_charge: visiting + urgentFee,
-      vat, discount_amount: promoDiscount, wallet_used: 0, total_amount: total,
-      promo_code: promoApplied?.code ?? null,
+      service_charge: price,
+      visiting_charge: visiting,
+      urgent_fee: urgentFee,
+      vat, discount_amount: 0, wallet_used: 0, total_amount: total,
     });
     setSubmitting(false);
     if (error) { alert(error); return; }
@@ -120,28 +107,6 @@ export default function BookingPage() {
             </Field>
           </Section>
 
-          {/* Promo */}
-          <Section title="Promo code">
-            {promoApplied ? (
-              <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
-                <div>
-                  <div className="text-sm font-semibold text-emerald-700">✓ {promoApplied.code} applied</div>
-                  <div className="text-xs text-gray-400">You save {formatPrice(promoDiscount)}</div>
-                </div>
-                <button type="button" onClick={() => { setPromoApplied(null); setPromoCode(""); }} className="text-xs text-red-500 hover:underline">Remove</button>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <input value={promoCode} placeholder="Enter promo code"
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())} className="input-field flex-1 font-mono text-sm" />
-                <button type="button" onClick={applyPromo} disabled={checkingPromo || !promoCode.trim()}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold hover:bg-gray-100 disabled:opacity-50">
-                  {checkingPromo ? "..." : "Apply"}
-                </button>
-              </div>
-            )}
-          </Section>
-
           {/* Payment */}
           <Section title="Payment method">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -172,7 +137,6 @@ export default function BookingPage() {
               <PriceLine label="Service charge" value={formatPrice(service.price)} />
               <PriceLine label="Visiting charge" value={formatPrice(visiting)} />
               {urgentFee > 0 && <PriceLine label="Urgent fee" value={formatPrice(urgentFee)} />}
-              {promoDiscount > 0 && <PriceLine label="Promo discount" value={`−${formatPrice(promoDiscount)}`} className="text-emerald-600" />}
               <PriceLine label="VAT (5%)" value={formatPrice(vat)} />
               <div className="my-2 border-t border-gray-100" />
               <div className="flex items-center justify-between text-base font-bold">

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Users, Calendar, DollarSign, Clock, PlusCircle, Settings, Tag, Wrench, LayoutGrid } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
 import {
-  fetchServices, fetchMockUsers, fetchProviderApplications, updateProviderStatus, SERVICES
+  fetchServices, fetchMockUsers, fetchProviderApplications, updateProviderStatus
 } from "@/lib/api";
 
 const statusStyles = {

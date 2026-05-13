@@ -150,8 +150,8 @@ export default function ProviderProfilePage() {
               <div className="flex items-center gap-3">
                 <span className="text-gray-500">NID:</span>
                 <span className="font-mono text-gray-700">
-                  {providerApplication?.nid
-                    ? providerApplication.nid.slice(0, 8) + "****"
+                  {providerApplication?.nid_number
+                    ? providerApplication.nid_number.slice(0, 8) + "****"
                     : "Not provided"}
                   <span className="ml-2 text-gray-400"><Shield className="inline h-3.5 w-3.5" /></span>
                 </span>

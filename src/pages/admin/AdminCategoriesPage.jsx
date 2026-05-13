@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, X, Pencil, Trash2 } from "lucide-react";
-import { fetchCategories, SERVICES } from "@/lib/api";
+import { fetchCategories, fetchServices } from "@/lib/api";
 
 let nextCatId = 100;
 
@@ -8,11 +8,15 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [modal, setModal] = useState(null);
   const [editData, setEditData] = useState(null);
+  const [services, setServices] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
 
-  useEffect(() => { fetchCategories().then(setCategories); }, []);
+  useEffect(() => {
+    fetchCategories().then(setCategories);
+    fetchServices().then(setServices);
+  }, []);
 
-  const getServiceCount = (catId) => SERVICES.filter((s) => s.category_id === catId).length;
+  const getServiceCount = (catId) => services.filter((s) => s.category === catId).length;
 
   const handleSave = (data) => {
     if (editData) {

@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, BarChart2, Users, Briefcase, Star, Wrench, Grid,
-  Calendar, CreditCard, Tag, Settings, Bell, LogOut, Menu, X,
+  Calendar, CreditCard, Settings, Bell, LogOut, Menu, X,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -35,7 +35,6 @@ const NAV_SECTIONS = [
     items: [
       { label: "Bookings", icon: Calendar, path: "/admin/bookings" },
       { label: "Payments", icon: CreditCard, path: "/admin/payments" },
-      { label: "Promo Codes", icon: Tag, path: "/admin/promos" },
     ],
   },
   {

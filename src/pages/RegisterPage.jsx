@@ -31,7 +31,7 @@ export default function RegisterPage() {
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           {[
-            { label: "Full name", key: "fullName", type: "text", placeholder: "Abdullah Rahman" },
+            { label: "Full name", key: "fullName", type: "text", placeholder: "Hafijur Rahman" },
             { label: "Email", key: "email", type: "email", placeholder: "you@example.com" },
             { label: "Phone", key: "phone", type: "tel", placeholder: "01XXXXXXXXX" },
             { label: "Password", key: "password", type: "password", placeholder: "At least 6 characters" },

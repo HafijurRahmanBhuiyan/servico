@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Save } from "lucide-react";
+import { Save, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/AuthContext";
 
 function Toast({ message, onClose }) {
   setTimeout(onClose, 3000);
@@ -12,6 +13,7 @@ function Toast({ message, onClose }) {
 }
 
 export default function AdminSettingsPage() {
+  const { changeAdminPassword } = useAuth();
   const [identity, setIdentity] = useState({
     site_name: "Servico",
     tagline: "Home services, on demand.",
@@ -22,9 +24,36 @@ export default function AdminSettingsPage() {
   const [vat, setVat] = useState(5);
   const [maintenance, setMaintenance] = useState(false);
   const [toast, setToast] = useState(null);
+  const [password, setPassword] = useState({ current: "", new: "", confirm: "" });
 
   const handleSave = () => {
     setToast("Settings saved!");
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleChangePassword = async () => {
+    if (!password.current || !password.new || !password.confirm) {
+      setToast("Please fill in all password fields");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    if (password.new !== password.confirm) {
+      setToast("New passwords do not match");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    if (password.new.length < 6) {
+      setToast("New password must be at least 6 characters");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    const { error } = await changeAdminPassword(password.current, password.new);
+    if (error) {
+      setToast(error);
+    } else {
+      setToast("Password updated successfully!");
+      setPassword({ current: "", new: "", confirm: "" });
+    }
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -98,6 +127,33 @@ export default function AdminSettingsPage() {
             className={cn("relative h-6 w-11 rounded-full transition", maintenance ? "bg-emerald-600" : "bg-gray-300")}
           >
             <span className={cn("absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition", maintenance && "translate-x-5")} />
+          </button>
+        </div>
+      </div>
+
+      {/* Security */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-soft">
+        <div className="flex items-center gap-2 mb-4">
+          <Shield className="h-5 w-5 text-gray-500" />
+          <h2 className="text-base font-bold text-gray-900">Security</h2>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Current Password</label>
+            <input type="password" className="input-field" value={password.current} onChange={(e) => setPassword({ ...password, current: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">New Password</label>
+              <input type="password" className="input-field" value={password.new} onChange={(e) => setPassword({ ...password, new: e.target.value })} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Confirm New Password</label>
+              <input type="password" className="input-field" value={password.confirm} onChange={(e) => setPassword({ ...password, confirm: e.target.value })} />
+            </div>
+          </div>
+          <button onClick={handleChangePassword} className="btn-primary">
+            <Save className="mr-1.5 h-4 w-4" /> Update Password
           </button>
         </div>
       </div>
