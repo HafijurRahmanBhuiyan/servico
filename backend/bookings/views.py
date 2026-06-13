@@ -53,4 +53,4 @@ class ProviderJobActionView(APIView):
             return Response({'error': 'Invalid status'}, status=400)
         booking.status = new_status
         booking.save()
-        return Response(BookingSerializer(booking).data)
+        return Response(BookingSerializer(booking, context={'request': request}).data)

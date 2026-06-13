@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Sum
 from .models import ProviderApplication, ProviderEarning
-from .serializers import ProviderApplicationSerializer, ProviderApplicationCreateSerializer, AdminProviderSerializer, ProviderEarningSerializer
+from .serializers import ProviderApplicationSerializer, ProviderApplicationCreateSerializer, AdminProviderSerializer, ProviderPublicSerializer, ProviderEarningSerializer
 
 class IsProvider(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -72,6 +72,16 @@ class AdminProviderDetailView(APIView):
             app.user.save()
         app.save()
         return Response(AdminProviderSerializer(app).data)
+
+class ProviderPublicDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        try:
+            app = ProviderApplication.objects.get(pk=pk, status='approved')
+        except ProviderApplication.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        return Response(ProviderPublicSerializer(app).data)
 
 class ProviderEarningsView(APIView):
     permission_classes = [IsProvider]

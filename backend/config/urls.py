@@ -12,6 +12,7 @@ urlpatterns = [
         path('', include('payments.urls')),
         path('', include('providers.urls')),
         path('', include('reviews.urls')),
+        path('', include('chat.urls')),
         path('', include('promos.urls')),
         path('admin/', include('admin_dashboard.urls')),
     ])),

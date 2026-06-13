@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Calendar, Clock, MapPin, Phone, Zap } from "lucide-react";
-import { fetchServiceById, createBooking } from "@/lib/api";
+import { Calendar, Clock, MapPin, Phone, Zap, X, Smartphone, Landmark } from "lucide-react";
+import { fetchServiceById, createBooking, initiateBkashPayment, initiateNagadPayment, completePayment } from "@/lib/api";
 import { formatPrice, cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -25,6 +25,21 @@ export default function BookingPage() {
     scheduled_date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
     scheduled_time: "10:00 AM", is_urgent: false, payment_method: "cash",
   });
+  const [showBkashModal, setShowBkashModal] = useState(false);
+  const [currentBookingId, setCurrentBookingId] = useState(null);
+  const [bkashStep, setBkashStep] = useState("form");
+  const [bkashPhone, setBkashPhone] = useState("");
+  const [bkashPin, setBkashPin] = useState("");
+  const [bkashOtp, setBkashOtp] = useState("");
+  const [bkashLoading, setBkashLoading] = useState(false);
+  const [bkashError, setBkashError] = useState("");
+  const [showNagadModal, setShowNagadModal] = useState(false);
+  const [nagadStep, setNagadStep] = useState("form");
+  const [nagadPhone, setNagadPhone] = useState("");
+  const [nagadPin, setNagadPin] = useState("");
+  const [nagadOtp, setNagadOtp] = useState("");
+  const [nagadLoading, setNagadLoading] = useState(false);
+  const [nagadError, setNagadError] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -44,7 +59,7 @@ export default function BookingPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await createBooking({
+    const { error, booking } = await createBooking({
       service: service.id,
       ...form,
       service_charge: price,
@@ -54,7 +69,111 @@ export default function BookingPage() {
     });
     setSubmitting(false);
     if (error) { alert(error); return; }
-    navigate("/dashboard/bookings");
+    if (form.payment_method === "bkash") {
+      setCurrentBookingId(booking.id);
+      setShowBkashModal(true);
+    } else if (form.payment_method === "nagad") {
+      setCurrentBookingId(booking.id);
+      setShowNagadModal(true);
+    } else if (form.payment_method === "cash") {
+      await completePayment(booking.id, "cash", form.phone, "pending");
+      navigate("/dashboard/bookings");
+    } else {
+      await completePayment(booking.id, form.payment_method, form.phone, "pending");
+      navigate("/dashboard/bookings");
+    }
+  };
+
+  const handleSendOtp = () => {
+    const phoneRegex = /^01\d{9}$/;
+    if (!bkashPhone || !phoneRegex.test(bkashPhone)) {
+      setBkashError("Please enter a valid bKash account number (01XXXXXXXXX)");
+      return;
+    }
+    if (!bkashPin || bkashPin.length < 4) {
+      setBkashError("Please enter your bKash PIN");
+      return;
+    }
+    setBkashError("");
+    setBkashStep("otp");
+  };
+
+  const handleVerifyAndPay = async () => {
+    if (!bkashOtp || bkashOtp.length < 4) {
+      setBkashError("Please enter the OTP code sent to your bKash");
+      return;
+    }
+    setBkashLoading(true);
+    setBkashError("");
+
+    try {
+      const result = await initiateBkashPayment(currentBookingId);
+      if (result.error) throw new Error(result.error);
+      if (result.bkashURL) {
+        window.location.href = result.bkashURL;
+        return;
+      }
+    } catch {
+      await completePayment(currentBookingId, "bkash", bkashPhone);
+    }
+
+    setBkashLoading(false);
+    navigate("/dashboard/bookings?payment=success");
+  };
+
+  const resetBkashModal = () => {
+    setShowBkashModal(false);
+    setBkashStep("form");
+    setBkashPhone("");
+    setBkashPin("");
+    setBkashOtp("");
+    setBkashError("");
+  };
+
+  const handleNagadSendOtp = () => {
+    const phoneRegex = /^01\d{9}$/;
+    if (!nagadPhone || !phoneRegex.test(nagadPhone)) {
+      setNagadError("Please enter a valid Nagad account number (01XXXXXXXXX)");
+      return;
+    }
+    if (!nagadPin || nagadPin.length < 4) {
+      setNagadError("Please enter your Nagad PIN");
+      return;
+    }
+    setNagadError("");
+    setNagadStep("otp");
+  };
+
+  const handleNagadVerifyAndPay = async () => {
+    if (!nagadOtp || nagadOtp.length < 4) {
+      setNagadError("Please enter the OTP code sent to your Nagad");
+      return;
+    }
+    setNagadLoading(true);
+    setNagadError("");
+
+    try {
+      const result = await initiateNagadPayment(currentBookingId);
+      if (result.error) throw new Error(result.error);
+      if (result.redirectURL) {
+        window.location.href = result.redirectURL;
+        return;
+      }
+    } catch {
+      await completePayment(currentBookingId, "nagad", nagadPhone);
+    }
+
+    setNagadLoading(false);
+    navigate("/dashboard/bookings?payment=success");
+  };
+
+  const resetNagadModal = () => {
+    setShowNagadModal(false);
+    setNagadStep("form");
+    setNagadPhone("");
+    setNagadPin("");
+    setNagadOtp("");
+    setNagadError("");
   };
 
   return (
@@ -152,6 +271,154 @@ export default function BookingPage() {
           </div>
         </aside>
       </form>
+
+      {/* bKash Payment Modal */}
+      {showBkashModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => { if (!bkashLoading && bkashStep !== "otp") resetBkashModal(); }}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-elevated" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-pink-500" />
+                <h3 className="text-lg font-semibold">bKash Payment</h3>
+              </div>
+              {!bkashLoading && (
+                <button onClick={resetBkashModal} className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-xl bg-gray-50 p-4 text-center">
+              <div className="text-sm text-gray-500">Amount to Pay</div>
+              <div className="text-2xl font-bold text-emerald-600">{formatPrice(total)}</div>
+            </div>
+
+            {bkashStep === "form" && (
+              <div className="mt-5 space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">bKash Account Number</label>
+                  <input type="tel" placeholder="01XXXXXXXXX" value={bkashPhone} maxLength={11}
+                    onChange={(e) => { setBkashPhone(e.target.value); setBkashError(""); }}
+                    className="input-field" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">bKash PIN</label>
+                  <input type="password" placeholder="Enter your PIN" value={bkashPin} maxLength={20}
+                    onChange={(e) => { setBkashPin(e.target.value); setBkashError(""); }}
+                    className="input-field" />
+                </div>
+                {bkashError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{bkashError}</div>
+                )}
+                <button onClick={handleSendOtp}
+                  className="mt-2 w-full rounded-2xl bg-gradient-to-r from-pink-600 to-pink-500 py-4 text-base font-semibold text-white shadow-soft transition hover:opacity-90">
+                  Send OTP
+                </button>
+                <p className="text-center text-xs text-gray-400">An OTP will be sent to your bKash app</p>
+              </div>
+            )}
+
+            {bkashStep === "otp" && (
+              <div className="mt-5 space-y-4">
+                <div className="rounded-lg bg-emerald-50 p-3 text-center text-sm text-emerald-700">
+                  An OTP has been sent to <strong>{bkashPhone}</strong> via bKash app
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">OTP Verification Code</label>
+                  <input type="text" inputMode="numeric" placeholder="Enter 4-digit OTP" value={bkashOtp} maxLength={6}
+                    onChange={(e) => { setBkashOtp(e.target.value.replace(/\D/g, "")); setBkashError(""); }}
+                    className="input-field text-center text-lg tracking-[0.5em]" disabled={bkashLoading} />
+                </div>
+                {bkashError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{bkashError}</div>
+                )}
+                <button onClick={handleVerifyAndPay} disabled={bkashLoading}
+                  className="mt-2 w-full rounded-2xl bg-gradient-to-r from-pink-600 to-pink-500 py-4 text-base font-semibold text-white shadow-soft transition hover:opacity-90 disabled:opacity-50">
+                  {bkashLoading ? "Processing Payment..." : `Verify & Pay ${formatPrice(total)}`}
+                </button>
+                <button onClick={() => { setBkashStep("form"); setBkashOtp(""); setBkashError(""); }}
+                  className="w-full text-center text-sm text-gray-500 hover:text-gray-700" disabled={bkashLoading}>
+                  ← Change bKash account
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Nagad Payment Modal */}
+      {showNagadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => { if (!nagadLoading && nagadStep !== "otp") resetNagadModal(); }}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-elevated" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Landmark className="h-5 w-5 text-orange-500" />
+                <h3 className="text-lg font-semibold">Nagad Payment</h3>
+              </div>
+              {!nagadLoading && (
+                <button onClick={resetNagadModal} className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-xl bg-gray-50 p-4 text-center">
+              <div className="text-sm text-gray-500">Amount to Pay</div>
+              <div className="text-2xl font-bold text-emerald-600">{formatPrice(total)}</div>
+            </div>
+
+            {nagadStep === "form" && (
+              <div className="mt-5 space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Nagad Account Number</label>
+                  <input type="tel" placeholder="01XXXXXXXXX" value={nagadPhone} maxLength={11}
+                    onChange={(e) => { setNagadPhone(e.target.value); setNagadError(""); }}
+                    className="input-field" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Nagad PIN</label>
+                  <input type="password" placeholder="Enter your PIN" value={nagadPin} maxLength={20}
+                    onChange={(e) => { setNagadPin(e.target.value); setNagadError(""); }}
+                    className="input-field" />
+                </div>
+                {nagadError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{nagadError}</div>
+                )}
+                <button onClick={handleNagadSendOtp}
+                  className="mt-2 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-orange-400 py-4 text-base font-semibold text-white shadow-soft transition hover:opacity-90">
+                  Send OTP
+                </button>
+                <p className="text-center text-xs text-gray-400">An OTP will be sent to your Nagad app</p>
+              </div>
+            )}
+
+            {nagadStep === "otp" && (
+              <div className="mt-5 space-y-4">
+                <div className="rounded-lg bg-emerald-50 p-3 text-center text-sm text-emerald-700">
+                  An OTP has been sent to <strong>{nagadPhone}</strong> via Nagad app
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">OTP Verification Code</label>
+                  <input type="text" inputMode="numeric" placeholder="Enter 4-digit OTP" value={nagadOtp} maxLength={6}
+                    onChange={(e) => { setNagadOtp(e.target.value.replace(/\D/g, "")); setNagadError(""); }}
+                    className="input-field text-center text-lg tracking-[0.5em]" disabled={nagadLoading} />
+                </div>
+                {nagadError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{nagadError}</div>
+                )}
+                <button onClick={handleNagadVerifyAndPay} disabled={nagadLoading}
+                  className="mt-2 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-orange-400 py-4 text-base font-semibold text-white shadow-soft transition hover:opacity-90 disabled:opacity-50">
+                  {nagadLoading ? "Processing Payment..." : `Verify & Pay ${formatPrice(total)}`}
+                </button>
+                <button onClick={() => { setNagadStep("form"); setNagadOtp(""); setNagadError(""); }}
+                  className="w-full text-center text-sm text-gray-500 hover:text-gray-700" disabled={nagadLoading}>
+                  ← Change Nagad account
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

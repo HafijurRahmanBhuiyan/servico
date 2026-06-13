@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Download, RefreshCw, Calendar } from "lucide-react";
+import { Search, Download, RefreshCw, Calendar, Phone, X, Mail, MapPin, User } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
-import { fetchAdminBookings, fetchProviderApplications } from "@/lib/api";
+import { fetchAdminBookings, fetchProviderApplications, assignBookingProvider, updateBookingStatus, fetchCategories } from "@/lib/api";
 
-const STATUS_TABS = ["All", "Pending", "Confirmed", "Completed", "Cancelled"];
+const STATUS_TABS = ["All", "Pending", "Assigned", "Confirmed", "Completed", "Cancelled"];
 
 const statusStyles = {
   pending:   "bg-amber-50 text-amber-700",
+  assigned:  "bg-indigo-50 text-indigo-700",
   confirmed: "bg-blue-50 text-blue-700",
   completed: "bg-emerald-50 text-emerald-700",
   cancelled: "bg-red-50 text-red-600",
@@ -59,27 +60,41 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
+function Toast({ message }) {
+  return (
+    <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-elevated">
+      {message}
+    </div>
+  );
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings]     = useState([]);
   const [providers, setProviders]   = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [statusTab, setStatusTab]   = useState("All");
   const [search, setSearch]         = useState("");
   const [dateFrom, setDateFrom]     = useState("");
   const [dateTo, setDateTo]         = useState("");
   const [expandedId, setExpandedId] = useState(null);
+  const [assigningId, setAssigningId] = useState(null);
+  const [customerProfile, setCustomerProfile] = useState(null);
+  const [toast, setToast] = useState(null);
 
   // ── load data ────────────────────────────────────────────────────────────
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [bkgs, apps] = await Promise.all([
+    const [bkgs, apps, cats] = await Promise.all([
       fetchAdminBookings(),
       fetchProviderApplications(),
+      fetchCategories(),
     ]);
     setBookings(bkgs);
-    setProviders(apps.filter((a) => a.status === "approved"));
+    setProviders(Array.isArray(apps) ? apps.filter((a) => a.status === "approved") : []);
+    setCategories(Array.isArray(cats) ? cats : []);
     setLoading(false);
   }, []);
 
@@ -109,20 +124,33 @@ export default function AdminBookingsPage() {
   const pendingCount   = bookings.filter((b) => b.status === "pending").length;
   const completedCount = bookings.filter((b) => b.status === "completed").length;
 
-  // ── status change (persisted to localStorage) ─────────────────────────────
-  const handleStatusChange = (id, newStatus) => {
-    const updated = bookings.map((b) => (b.id === id ? { ...b, status: newStatus } : b));
-    setBookings(updated);
-    localStorage.setItem("servico_bookings", JSON.stringify(updated));
+  // ── status change (persisted to backend) ──────────────────────────────────
+  const handleStatusChange = async (id, newStatus) => {
+    setToast(null);
+    const result = await updateBookingStatus(id, newStatus);
+    if (result.error) {
+      setToast(result.error);
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setBookings((prev) => prev.map((b) => (b.id === id ? result : b)));
+    setToast(`Status updated to "${newStatus}"`);
+    setTimeout(() => setToast(null), 3000);
   };
 
   // ── assign provider ───────────────────────────────────────────────────────
-  const handleAssignProvider = (id, providerName) => {
-    const updated = bookings.map((b) =>
-      b.id === id ? { ...b, provider_name: providerName, status: "confirmed" } : b
-    );
-    setBookings(updated);
-    localStorage.setItem("servico_bookings", JSON.stringify(updated));
+  const handleAssignProvider = async (bookingId, providerId) => {
+    setAssigningId(null);
+    setToast(null);
+    const result = await assignBookingProvider(bookingId, providerId);
+    if (result.error) {
+      setToast(result.error);
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setBookings((prev) => prev.map((b) => (b.id === bookingId ? result : b)));
+    setToast(`Assigned: ${result.provider_name || "Provider assigned"}`);
+    setTimeout(() => setToast(null), 3000);
   };
 
   // ── export CSV ─────────────────────────────────────────────────────────────
@@ -167,6 +195,8 @@ export default function AdminBookingsPage() {
   // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
+
+      {toast && <Toast message={toast} />}
 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -345,9 +375,9 @@ export default function AdminBookingsPage() {
 
                       {/* Customer */}
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900 leading-tight">
+                        <button onClick={() => setCustomerProfile(b)} className="font-medium text-gray-900 leading-tight hover:text-emerald-600 transition text-left">
                           {b.customer_name || "—"}
-                        </div>
+                        </button>
                         <div className="text-xs text-gray-400">{b.phone || ""}</div>
                       </td>
 
@@ -385,26 +415,104 @@ export default function AdminBookingsPage() {
 
                           {/* Assign provider (only when pending) */}
                           {b.status === "pending" && (
-                            <select
-                              className="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white"
-                              defaultValue=""
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  handleAssignProvider(b.id, e.target.value);
+                            <div className="relative">
+                              <button
+                                onClick={() =>
+                                  setAssigningId(assigningId === b.id ? null : b.id)
                                 }
-                              }}
-                            >
-                              <option value="" disabled>Assign…</option>
-                              {providers.map((p) => (
-                                <option key={p.id} value={p.full_name}>
-                                  {p.full_name}
-                                </option>
-                              ))}
-                            </select>
+                                className="rounded-lg border border-gray-200 px-2 py-1 text-xs bg-white hover:bg-gray-50"
+                              >
+                                {assigningId === b.id ? "Cancel" : "Assign"}
+                              </button>
+
+                              {assigningId === b.id && (() => {
+                                const serviceCat = b.service?.category;
+                                const cat = categories.find((c) => c.id === serviceCat);
+                                const catLabel = cat?.label?.toLowerCase() || "";
+                                const serviceTitle = (b.service?.title || "").toLowerCase();
+                                const hasTarget = catLabel || serviceTitle;
+                                const matchingProviders = hasTarget
+                                  ? providers.filter((p) =>
+                                      Array.isArray(p.skills) &&
+                                      p.skills.some((s) => {
+                                        const skill = s.toLowerCase();
+                                        return (catLabel && (skill === catLabel || skill.includes(catLabel) || catLabel.includes(skill))) ||
+                                               (serviceTitle && (serviceTitle.includes(skill) || skill.includes(serviceTitle)));
+                                      })
+                                    )
+                                  : providers;
+
+                                return (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-40 bg-black/50"
+                                    onClick={() => setAssigningId(null)}
+                                  />
+                                  <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                                    <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white shadow-elevated max-h-[70vh] overflow-y-auto pointer-events-auto">
+                                    {matchingProviders.length === 0 ? (
+                                      <div className="p-4 text-center text-xs text-gray-400">
+                                        {catLabel ? "No providers match this service category" : "No approved providers"}
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="sticky top-0 bg-white border-b border-gray-100 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                          {cat?.label || "Service"}: {b.service?.title ?? "—"}
+                                        </div>
+                                        {matchingProviders.map((p) => (
+                                          <div
+                                            key={p.id}
+                                            className="group flex items-center gap-2 border-b border-gray-100 p-3 last:border-b-0"
+                                          >
+                                            <button
+                                              onClick={() => handleAssignProvider(b.id, p.id)}
+                                              className="flex-1 text-left"
+                                            >
+                                              <div className="flex items-center justify-between">
+                                                <span className="font-medium text-gray-900 text-sm">
+                                                  {p.full_name}
+                                                </span>
+                                                {p.experience_years && (
+                                                  <span className="text-[11px] text-gray-400">
+                                                    {p.experience_years} yrs
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <div className="mt-0.5 text-xs text-gray-500 line-clamp-2">
+                                                {Array.isArray(p.skills) && p.skills.length > 0
+                                                  ? `Skills: ${p.skills.join(", ")}`
+                                                  : "No skills listed"}
+                                              </div>
+                                              {p.phone && (
+                                                <div className="mt-0.5 text-xs text-gray-400">
+                                                  📞 {p.phone}
+                                                </div>
+                                              )}
+                                            </button>
+                                            {p.phone && (
+                                              <a
+                                                href={`tel:${p.phone}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="shrink-0 rounded-lg border border-gray-200 bg-white p-2 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 transition"
+                                                title={`Call ${p.full_name}`}
+                                              >
+                                                <Phone className="h-4 w-4" />
+                                              </a>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                </>
+                                );
+                              })()}
+                            </div>
                           )}
 
-                          {/* Confirm (pending without a provider assigned via select above) */}
-                          {b.status === "pending" && (
+                          {/* Confirm */}
+                          {(b.status === "pending" || b.status === "assigned") && (
                             <button
                               onClick={() => handleStatusChange(b.id, "confirmed")}
                               className="rounded-lg bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700"
@@ -424,7 +532,7 @@ export default function AdminBookingsPage() {
                           )}
 
                           {/* Cancel */}
-                          {(b.status === "pending" || b.status === "confirmed") && (
+                          {(b.status === "pending" || b.status === "assigned" || b.status === "confirmed") && (
                             <button
                               onClick={() => handleStatusChange(b.id, "cancelled")}
                               className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
@@ -490,6 +598,48 @@ export default function AdminBookingsPage() {
           </span>
         </div>
       </div>
+
+      {/* Customer Profile Modal */}
+      {customerProfile && (() => {
+        const c = customerProfile;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setCustomerProfile(null)}>
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-elevated" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Customer Profile</h3>
+                <button onClick={() => setCustomerProfile(null)} className="rounded-lg p-1 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="flex flex-col items-center pb-4 border-b border-gray-100">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-lg font-bold text-white">
+                  {(c.customer_name || "U")[0]?.toUpperCase()}
+                </div>
+                <h2 className="mt-3 text-lg font-bold text-gray-900">{c.customer_name || "—"}</h2>
+              </div>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Mail className="h-4 w-4 text-gray-400 shrink-0" />
+                  {c.customer_email ? (
+                    <a href={`mailto:${c.customer_email}`} className="text-emerald-600 hover:underline truncate">{c.customer_email}</a>
+                  ) : <span>—</span>}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Phone className="h-4 w-4 text-gray-400 shrink-0" />
+                  {c.phone ? (
+                    <a href={`tel:${c.phone}`} className="text-emerald-600 hover:underline">{c.phone}</a>
+                  ) : <span>—</span>}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
+                  <span>{c.address || "—"}</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400">
+                Customer ID: {c.customer ?? "—"} &middot; Booked: {c.scheduled_date || "—"}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

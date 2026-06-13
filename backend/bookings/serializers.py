@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from .models import Booking
 from services.serializers import ServiceListSerializer
+from chat.models import Message
 
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'service', 'customer_name', 'phone', 'address', 'notes',
+            'id', 'service', 'customer_name', 'phone', 'address', 'notes',
             'scheduled_date', 'scheduled_time', 'is_urgent', 'payment_method',
             'promo_code', 'service_charge', 'visiting_charge', 'urgent_fee',
             'discount_amount', 'vat', 'wallet_used', 'total_amount',
@@ -18,9 +19,19 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
 class BookingSerializer(serializers.ModelSerializer):
     service = ServiceListSerializer(read_only=True)
+    provider_name = serializers.CharField(source='provider.full_name', read_only=True, default=None)
+    provider_phone = serializers.CharField(source='provider.phone', read_only=True, default=None)
+    unread_messages = serializers.SerializerMethodField()
+
     class Meta:
         model = Booking
         fields = '__all__'
+
+    def get_unread_messages(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user:
+            return 0
+        return Message.objects.filter(booking=obj, read=False).exclude(sender=request.user).count()
 
 class AdminBookingSerializer(serializers.ModelSerializer):
     service = ServiceListSerializer(read_only=True)

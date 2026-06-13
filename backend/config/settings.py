@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'providers',
     'reviews',
     'promos',
+    'chat',
     'admin_dashboard',
 ]
 

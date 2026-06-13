@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, X, Star, Briefcase, MapPin, Phone, Mail, Award, Clock, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchProviderApplications, updateProviderStatus } from "@/lib/api";
+import ProviderAvatar from "@/components/ProviderAvatar";
 
-const TABS = ["Pending", "Approved", "Rejected", "Suspended"];
+const TABS = ["All", "Pending", "Approved", "Rejected", "Suspended"];
 
 function Toast({ message, onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
@@ -20,14 +21,15 @@ export default function AdminProvidersPage() {
   const [search, setSearch] = useState("");
   const [rejectId, setRejectId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [viewProfileId, setViewProfileId] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => { fetchProviderApplications().then(setApps); }, []);
 
   const filtered = apps.filter((a) => {
-    const statusMatch = a.status === tab.toLowerCase();
+    const statusMatch = tab === "All" || a.status === tab.toLowerCase();
     const q = search.toLowerCase();
-    const textMatch = !q || a.full_name.toLowerCase().includes(q) || a.skills.some((s) => s.toLowerCase().includes(q));
+    const textMatch = !q || a.full_name.toLowerCase().includes(q) || (a.skills || []).some((s) => s.toLowerCase().includes(q));
     return statusMatch && textMatch;
   });
 
@@ -95,16 +97,13 @@ export default function AdminProvidersPage() {
       <div className="space-y-4">
         {filtered.length === 0 && (
           <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center text-gray-400">
-            No {tab.toLowerCase()} applications
+            {tab === "All" ? "No applications found" : `No ${tab.toLowerCase()} applications`}
           </div>
         )}
         {filtered.map((app) => (
           <div key={app.id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-soft">
             <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-sm font-bold text-white">
-                {getInitials(app.full_name)}
-              </div>
+              <ProviderAvatar avatar={app.avatar} name={app.full_name} size="lg" />
 
               {/* Info */}
               <div className="flex-1 min-w-0">
@@ -129,7 +128,7 @@ export default function AdminProvidersPage() {
 
                 {/* Skills */}
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {app.skills.map((s) => (
+                  {(app.skills || []).map((s) => (
                     <span key={s} className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                       {s}
                     </span>
@@ -149,7 +148,7 @@ export default function AdminProvidersPage() {
 
                 {/* Actions */}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {tab === "Pending" && (
+                  {(tab === "Pending" || (tab === "All" && app.status === "pending")) && (
                     <>
                       <button onClick={() => handleApprove(app.id)} className="btn-primary text-sm px-4 py-1.5">
                         Approve
@@ -166,22 +165,22 @@ export default function AdminProvidersPage() {
                       )}
                     </>
                   )}
-                  {tab === "Approved" && (
+                  {(tab === "Approved" || (tab === "All" && app.status === "approved")) && (
                     <>
                       <button onClick={() => handleStatusChange(app.id, "suspended")} className="rounded-lg border border-red-300 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50">
                         Suspend
                       </button>
-                      <button onClick={() => alert("Viewing provider profile...")} className="btn-secondary text-sm px-4 py-1.5">
+                      <button onClick={() => setViewProfileId(app.id)} className="btn-secondary text-sm px-4 py-1.5">
                         View Profile
                       </button>
                     </>
                   )}
-                  {tab === "Rejected" && (
+                  {(tab === "Rejected" || (tab === "All" && app.status === "rejected")) && (
                     <button onClick={() => handleStatusChange(app.id, "pending")} className="btn-secondary text-sm px-4 py-1.5">
                       Re-review
                     </button>
                   )}
-                  {tab === "Suspended" && (
+                  {(tab === "Suspended" || (tab === "All" && app.status === "suspended")) && (
                     <button onClick={() => handleStatusChange(app.id, "approved")} className="btn-primary text-sm px-4 py-1.5">
                       Restore
                     </button>
@@ -213,6 +212,94 @@ export default function AdminProvidersPage() {
           </div>
         ))}
       </div>
+
+      {/* View Profile Modal */}
+      {viewProfileId && (() => {
+        const app = apps.find((a) => a.id === viewProfileId);
+        if (!app) return null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setViewProfileId(null)}>
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-elevated max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Provider Profile</h3>
+                <button onClick={() => setViewProfileId(null)} className="rounded-lg p-1 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+              </div>
+
+              <div className="flex flex-col items-center pb-4 border-b border-gray-100">
+                <ProviderAvatar avatar={app.avatar} name={app.full_name} size="xl" />
+                <h2 className="mt-3 text-xl font-bold text-gray-900">{app.full_name}</h2>
+                {app.total_jobs > 0 && (
+                  <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-current" /> {app.average_rating}</span>
+                    <span>{app.total_jobs} jobs completed</span>
+                  </div>
+                )}
+                <span className={cn(
+                  "mt-2 rounded-full px-3 py-0.5 text-xs font-semibold capitalize",
+                  app.status === "approved" && "bg-emerald-50 text-emerald-700",
+                  app.status === "pending" && "bg-amber-50 text-amber-700",
+                  app.status === "rejected" && "bg-red-50 text-red-600",
+                  app.status === "suspended" && "bg-gray-100 text-gray-600",
+                )}>{app.status}</span>
+              </div>
+
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Mail className="h-4 w-4 text-gray-400" /> {app.user?.email || "—"}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Phone className="h-4 w-4 text-gray-400" /> {app.phone}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <MapPin className="h-4 w-4 text-gray-400" /> {app.address}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <FileText className="h-4 w-4 text-gray-400" /> NID: {app.nid_number}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Briefcase className="h-4 w-4 text-gray-400" /> Experience: {app.experience_years} years
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Clock className="h-4 w-4 text-gray-400" /> Availability: {app.availability}
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Award className="h-4 w-4 text-gray-400" /> Earnings: ৳{Number(app.total_earnings).toLocaleString()}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold text-gray-700">Skills</h4>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {(app.skills || []).map((s) => (
+                    <span key={s} className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{s}</span>
+                  ))}
+                </div>
+              </div>
+
+              {app.bio && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold text-gray-700">Bio</h4>
+                  <p className="mt-1 text-sm text-gray-500 italic">"{app.bio}"</p>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
+                <span>Applied: {app.applied_at}</span>
+                {app.nid_file && (
+                  <a href={app.nid_file} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">View NID Document</a>
+                )}
+              </div>
+
+              {app.reject_reason && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
+                  <h4 className="text-xs font-semibold text-red-700">Rejection Reason</h4>
+                  <p className="mt-0.5 text-sm text-red-600">{app.reject_reason}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -5,10 +5,11 @@ from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import Payment
-from .serializers import PaymentSerializer, InitiatePaymentSerializer
+from .serializers import PaymentSerializer, InitiatePaymentSerializer, CompletePaymentSerializer
 from .bkash import get_bkash_token, create_bkash_payment, execute_bkash_payment, query_bkash_payment
 from .nagad import initiate_nagad_payment, complete_nagad_payment
 from bookings.models import Booking
+from admin_dashboard.models import SiteSetting
 
 class BkashInitiateView(APIView):
     """
@@ -153,6 +154,57 @@ class NagadCallbackView(APIView):
             payment.status = 'failed'
             payment.save()
             return redirect('http://localhost:5173/payment/failed?reason=nagad_failure')
+
+class PaymentCompleteView(APIView):
+    """
+    POST /api/payments/complete/
+    Body: { "booking_id": 123, "method": "bkash", "phone": "01XXXXXXXXX", "status": "paid" }
+    Creates/updates a Payment record and marks the booking as paid/confirmed.
+    Used when the payment flow completes (real gateway or simulated fallback).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = CompletePaymentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        booking_id = serializer.validated_data['booking_id']
+        method = serializer.validated_data['method']
+        phone = serializer.validated_data.get('phone', '')
+        new_status = serializer.validated_data.get('status', 'paid')
+        try:
+            booking = Booking.objects.get(id=booking_id, customer=request.user)
+        except Booking.DoesNotExist:
+            return Response({'error': 'Booking not found'}, status=404)
+        payment, created = Payment.objects.get_or_create(
+            booking=booking,
+            defaults={'customer': request.user, 'method': method, 'amount': booking.total_amount}
+        )
+        if not created:
+            payment.method = method
+            payment.amount = booking.total_amount
+        payment.gateway_response = {'phone': phone, 'completed_via': 'simulated' if method in ('bkash', 'nagad') else 'direct'}
+        payment.gateway_transaction_id = f"TXN-{booking_id}-{int(booking.created_at.timestamp()) if booking.created_at else ''}"
+        payment.status = new_status
+        # Store merchant account from site settings
+        try:
+            site_settings = SiteSetting.objects.get(pk=1)
+            if method == 'bkash':
+                payment.merchant_account = site_settings.bkash_number
+            elif method == 'nagad':
+                payment.merchant_account = site_settings.nagad_number
+            elif method in ('cash', 'card'):
+                payment.merchant_account = site_settings.bank_account_number
+        except SiteSetting.DoesNotExist:
+            pass
+        payment.save()
+        booking.payment_method = method
+        booking.payment_status = 'paid' if new_status == 'paid' else 'unpaid'
+        booking.payment_reference = payment.gateway_transaction_id
+        if new_status == 'paid':
+            booking.status = 'confirmed'
+        booking.save()
+        return Response(PaymentSerializer(payment).data)
 
 class AdminPaymentListView(generics.ListAPIView):
     serializer_class = PaymentSerializer

@@ -1,19 +1,28 @@
 import { useState, useEffect } from "react";
 import { Star, MessageSquare, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/AuthContext";
 import { fetchProviderReviews } from "@/lib/api";
 
 const RATING_FILTERS = ["All", "5", "4", "3", "2", "1"];
 const SORT_OPTIONS = ["Newest", "Highest", "Lowest"];
 
 export default function ProviderReviewsPage() {
+  const { providerApplication } = useAuth();
   const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [ratingFilter, setRatingFilter] = useState("All");
   const [sort, setSort] = useState("Newest");
   const [replyText, setReplyText] = useState({});
   const [replies, setReplies] = useState({});
 
-  useEffect(() => { fetchProviderReviews("u2").then(setReviews); }, []);
+  useEffect(() => {
+    if (!providerApplication?.id) return;
+    setLoading(true);
+    fetchProviderReviews(providerApplication.id)
+      .then(setReviews)
+      .finally(() => setLoading(false));
+  }, [providerApplication?.id]);
 
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -109,7 +118,10 @@ export default function ProviderReviewsPage() {
 
       {/* Review cards */}
       <div className="space-y-4">
-        {filtered.length === 0 && (
+        {loading && (
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center text-gray-400">Loading reviews...</div>
+        )}
+        {!loading && filtered.length === 0 && (
           <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center text-gray-400">No reviews found</div>
         )}
         {filtered.map((r) => (

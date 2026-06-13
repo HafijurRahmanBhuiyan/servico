@@ -90,6 +90,7 @@ export default function AdminReviewsPage() {
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
               <th className="px-5 py-3">Service</th>
+              <th className="px-5 py-3">Provider</th>
               <th className="px-5 py-3">Customer</th>
               <th className="px-5 py-3">Rating</th>
               <th className="px-5 py-3">Review</th>
@@ -100,11 +101,12 @@ export default function AdminReviewsPage() {
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400">No reviews found</td></tr>
+              <tr><td colSpan={8} className="px-5 py-12 text-center text-gray-400">No reviews found</td></tr>
             )}
             {filtered.map((r) => (
               <tr key={r.id} className={cn("border-b border-gray-50 hover:bg-gray-50", r.status === "hidden" && "opacity-60")}>
                 <td className="px-5 py-3 font-medium">{r.service_title}</td>
+                <td className="px-5 py-3 text-gray-500">{r.provider_name || '—'}</td>
                 <td className="px-5 py-3 text-gray-500">{r.customer_name}</td>
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-1">{renderStars(r.rating)}</div>

@@ -8,16 +8,28 @@ class ServiceReviewListView(generics.ListAPIView):
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
-        return Review.objects.filter(service_id=self.kwargs['service_id'], status='published')
+        return Review.objects.filter(
+            service_id=self.kwargs['service_id'], status='published'
+        ).select_related('customer', 'service', 'booking__provider')
 
 class ReviewCreateView(generics.CreateAPIView):
     serializer_class = ReviewCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+class ProviderReviewListView(generics.ListAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Review.objects.filter(
+            booking__provider_id=self.kwargs['provider_id'],
+            status='published'
+        ).select_related('customer', 'service', 'booking__provider')
+
 class AdminReviewListView(generics.ListAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAdminUser]
-    queryset = Review.objects.all().select_related('customer', 'service')
+    queryset = Review.objects.all().select_related('customer', 'service', 'booking__provider')
     filterset_fields = ['status']
 
 class AdminReviewDetailView(APIView):

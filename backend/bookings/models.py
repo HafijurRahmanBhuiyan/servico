@@ -5,6 +5,7 @@ from services.models import Service
 class Booking(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('assigned', 'Assigned'),
         ('confirmed', 'Confirmed'),
         ('accepted', 'Accepted'),
         ('in_progress', 'In Progress'),

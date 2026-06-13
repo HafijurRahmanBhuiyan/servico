@@ -9,6 +9,7 @@ from providers.models import ProviderApplication
 from reviews.models import Review
 from django.db.models import Sum, Count
 from django.utils import timezone
+from .models import SiteSetting
 import datetime
 
 class AdminDashboardStatsView(APIView):
@@ -41,20 +42,33 @@ class AdminDashboardStatsView(APIView):
 class AdminSiteSettingsView(APIView):
     """
     GET/PATCH /api/admin/settings/
-    Returns and updates site-wide settings.
+    Returns and updates site-wide settings persisted in the database.
     """
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
+        setting, _ = SiteSetting.objects.get_or_create(pk=1)
         return Response({
-            'site_name': 'Servico',
-            'tagline': 'Home services, on demand.',
-            'support_email': 'support@servico.com',
-            'support_phone': '+880-1700-000000',
-            'visiting_fee': 150,
-            'urgent_surcharge': 100,
-            'vat_percent': 5,
+            'site_name': setting.site_name,
+            'tagline': setting.tagline,
+            'support_email': setting.support_email,
+            'support_phone': setting.support_phone,
+            'visiting_fee': float(setting.visiting_fee),
+            'urgent_surcharge': float(setting.urgent_surcharge),
+            'vat_percent': float(setting.vat_percent),
+            'bkash_number': setting.bkash_number,
+            'nagad_number': setting.nagad_number,
+            'bank_account_number': setting.bank_account_number,
         })
 
     def patch(self, request):
-        return Response({'message': 'Settings updated (implement persistence as needed)'})
+        setting, _ = SiteSetting.objects.get_or_create(pk=1)
+        for field in ['site_name', 'tagline', 'support_email', 'support_phone',
+                      'bkash_number', 'nagad_number', 'bank_account_number']:
+            if field in request.data:
+                setattr(setting, field, request.data[field])
+        for field in ['visiting_fee', 'urgent_surcharge', 'vat_percent']:
+            if field in request.data:
+                setattr(setting, field, float(request.data[field]))
+        setting.save()
+        return Response({'message': 'Settings updated successfully'})

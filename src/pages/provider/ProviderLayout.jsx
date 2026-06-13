@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import ProviderAvatar from "@/components/ProviderAvatar";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 import {
@@ -49,9 +50,9 @@ const BREADCRUMB_MAP = {
 };
 
 function Sidebar({ mobileOpen, setMobileOpen }) {
-  const { user, signOut, providerStatus } = useAuth();
+  const { user, signOut, providerStatus, providerApplication } = useAuth();
   const navigate = useNavigate();
-  const isApproved = providerStatus === "approved";
+  const isApproved = user?.role === "provider" || providerStatus === "approved";
 
   const handleSignOut = () => {
     signOut();
@@ -125,9 +126,7 @@ function Sidebar({ mobileOpen, setMobileOpen }) {
         {/* Bottom */}
         <div className="border-t border-white/10 px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400 text-sm font-bold text-gray-900">
-              {user?.name?.[0]?.toUpperCase() ?? "P"}
-            </div>
+            <ProviderAvatar avatar={providerApplication?.avatar} name={user?.name} size="sm" className="!border-amber-300" />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-white truncate">{user?.name ?? "Provider"}</div>
               <div className="text-xs text-white/50 truncate">Service Provider</div>
@@ -144,7 +143,7 @@ function Sidebar({ mobileOpen, setMobileOpen }) {
 
 function TopBar({ setMobileOpen }) {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, providerApplication } = useAuth();
   const pageName = BREADCRUMB_MAP[location.pathname] ?? "Dashboard";
 
   return (
@@ -164,9 +163,7 @@ function TopBar({ setMobileOpen }) {
           <Bell className="h-5 w-5" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
         </button>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-gray-900">
-          {user?.name?.[0]?.toUpperCase() ?? "P"}
-        </div>
+        <ProviderAvatar avatar={providerApplication?.avatar} name={user?.name} size="sm" className="!border-amber-300" />
       </div>
     </header>
   );
@@ -174,7 +171,8 @@ function TopBar({ setMobileOpen }) {
 
 export default function ProviderLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { providerStatus } = useAuth();
+  const { user, providerStatus } = useAuth();
+  const isProvider = user?.role === "provider";
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -182,7 +180,7 @@ export default function ProviderLayout() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar setMobileOpen={setMobileOpen} />
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
-          {providerStatus !== "approved" ? <PendingApprovalScreen /> : <Outlet />}
+          {isProvider || providerStatus === "approved" ? <Outlet /> : <PendingApprovalScreen />}
         </main>
       </div>
     </div>

@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Save, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Save, Shield, Smartphone, Landmark, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
+import { fetchSiteSettings, updateSiteSettings } from "@/lib/api";
 
 function Toast({ message, onClose }) {
   setTimeout(onClose, 3000);
@@ -22,13 +23,50 @@ export default function AdminSettingsPage() {
   });
   const [fees, setFees] = useState({ visiting_fee: 150, urgent_surcharge: 100 });
   const [vat, setVat] = useState(5);
+  const [accounts, setAccounts] = useState({ bkash_number: "", nagad_number: "", bank_account_number: "" });
+  const [savedAccounts, setSavedAccounts] = useState({ bkash_number: "", nagad_number: "", bank_account_number: "" });
+  const [editingField, setEditingField] = useState(null);
   const [maintenance, setMaintenance] = useState(false);
   const [toast, setToast] = useState(null);
   const [password, setPassword] = useState({ current: "", new: "", confirm: "" });
 
-  const handleSave = () => {
+  useEffect(() => {
+    fetchSiteSettings().then((data) => {
+      if (data.site_name) setIdentity({ site_name: data.site_name, tagline: data.tagline, support_email: data.support_email, support_phone: data.support_phone });
+      if (data.visiting_fee !== undefined) setFees({ visiting_fee: data.visiting_fee, urgent_surcharge: data.urgent_surcharge });
+      if (data.vat_percent !== undefined) setVat(data.vat_percent);
+      const accts = { bkash_number: data.bkash_number || "", nagad_number: data.nagad_number || "", bank_account_number: data.bank_account_number || "" };
+      setAccounts(accts);
+      setSavedAccounts(accts);
+    });
+  }, []);
+
+  const handleSave = async () => {
+    await updateSiteSettings({
+      ...identity,
+      visiting_fee: fees.visiting_fee,
+      urgent_surcharge: fees.urgent_surcharge,
+      vat_percent: vat,
+      ...accounts,
+    });
+    setSavedAccounts({ ...accounts });
     setToast("Settings saved!");
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const labels = { bkash_number: "bKash", nagad_number: "Nagad", bank_account_number: "Bank Account" };
+
+  const handleSaveField = async (field) => {
+    await updateSiteSettings({ [field]: accounts[field] });
+    setSavedAccounts((prev) => ({ ...prev, [field]: accounts[field] }));
+    setEditingField(null);
+    setToast(`${labels[field]} number updated!`);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleCancelField = (field) => {
+    setAccounts((prev) => ({ ...prev, [field]: savedAccounts[field] }));
+    setEditingField(null);
   };
 
   const handleChangePassword = async () => {
@@ -112,6 +150,81 @@ export default function AdminSettingsPage() {
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">VAT Rate (%)</label>
           <input type="number" className="input-field max-w-xs" value={vat} onChange={(e) => setVat(Number(e.target.value))} min={0} max={100} step={0.1} />
+        </div>
+      </div>
+
+      {/* Account Information */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-soft">
+        <h2 className="text-base font-bold text-gray-900 mb-4">Account Information</h2>
+        <p className="mb-4 text-xs text-gray-500">Customer payments will be transferred to these accounts</p>
+        <div className="space-y-4">
+
+          {/* bKash */}
+          <div className="flex items-center gap-3">
+            <Smartphone className="h-5 w-5 text-pink-500 shrink-0" />
+            <div className="flex-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">bKash Number</label>
+              {editingField === "bkash_number" ? (
+                <div className="flex items-center gap-2">
+                  <input className="input-field flex-1" placeholder="01XXXXXXXXX" value={accounts.bkash_number}
+                    onChange={(e) => setAccounts({ ...accounts, bkash_number: e.target.value })}
+                    autoFocus />
+                  <button onClick={() => handleSaveField("bkash_number")} className="btn-primary text-sm px-3 py-1.5">Save</button>
+                  <button onClick={() => handleCancelField("bkash_number")} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900">{accounts.bkash_number || <span className="text-gray-400 italic">Not set</span>}</span>
+                  <button onClick={() => setEditingField("bkash_number")} className="text-xs text-emerald-600 hover:underline">Edit</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Nagad */}
+          <div className="flex items-center gap-3">
+            <Landmark className="h-5 w-5 text-orange-500 shrink-0" />
+            <div className="flex-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">Nagad Number</label>
+              {editingField === "nagad_number" ? (
+                <div className="flex items-center gap-2">
+                  <input className="input-field flex-1" placeholder="01XXXXXXXXX" value={accounts.nagad_number}
+                    onChange={(e) => setAccounts({ ...accounts, nagad_number: e.target.value })}
+                    autoFocus />
+                  <button onClick={() => handleSaveField("nagad_number")} className="btn-primary text-sm px-3 py-1.5">Save</button>
+                  <button onClick={() => handleCancelField("nagad_number")} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900">{accounts.nagad_number || <span className="text-gray-400 italic">Not set</span>}</span>
+                  <button onClick={() => setEditingField("nagad_number")} className="text-xs text-emerald-600 hover:underline">Edit</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bank Account */}
+          <div className="flex items-center gap-3">
+            <Building2 className="h-5 w-5 text-blue-500 shrink-0" />
+            <div className="flex-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">Bank Account Number</label>
+              {editingField === "bank_account_number" ? (
+                <div className="flex items-center gap-2">
+                  <input className="input-field flex-1" placeholder="Enter bank account number" value={accounts.bank_account_number}
+                    onChange={(e) => setAccounts({ ...accounts, bank_account_number: e.target.value })}
+                    autoFocus />
+                  <button onClick={() => handleSaveField("bank_account_number")} className="btn-primary text-sm px-3 py-1.5">Save</button>
+                  <button onClick={() => handleCancelField("bank_account_number")} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900">{accounts.bank_account_number || <span className="text-gray-400 italic">Not set</span>}</span>
+                  <button onClick={() => setEditingField("bank_account_number")} className="text-xs text-emerald-600 hover:underline">Edit</button>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
 

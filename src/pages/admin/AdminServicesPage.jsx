@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
-import { Search, Plus, X, Star } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Plus, X, Star, Upload, Trash2 } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
-import { fetchServices, fetchCategories } from "@/lib/api";
-
-let nextServiceId = 100;
+import { fetchServices, fetchCategories, createService, updateService, deleteService } from "@/lib/api";
 
 export default function AdminServicesPage() {
   const [services, setServices] = useState([]);
@@ -15,7 +13,9 @@ export default function AdminServicesPage() {
   const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
-    fetchServices().then(setServices);
+    fetchServices().then((data) => {
+      setServices(data.map((s) => ({ ...s, category_id: s.category })));
+    });
     fetchCategories().then(setCategories);
   }, []);
 
@@ -28,22 +28,30 @@ export default function AdminServicesPage() {
 
   const getCategoryName = (catId) => categories.find((c) => c.id === catId)?.label ?? "—";
 
-  const handleTogglePopular = (id) => {
+  const handleTogglePopular = async (id) => {
+    const svc = services.find((s) => s.id === id);
+    await updateService(id, { is_popular: !svc.is_popular });
     setServices((prev) =>
       prev.map((s) => (s.id === id ? { ...s, is_popular: !s.is_popular } : s))
     );
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
+    await deleteService(id);
     setServices((prev) => prev.filter((s) => s.id !== id));
     setDeleteId(null);
   };
 
-  const handleSave = (data) => {
+  const handleSave = async (formData) => {
+    const payload = { ...formData, category: formData.category_id };
     if (editData) {
-      setServices((prev) => prev.map((s) => (s.id === editData.id ? { ...s, ...data } : s)));
+      const updated = await updateService(editData.id, payload);
+      if (updated.error) { alert(updated.error); return; }
+      setServices((prev) => prev.map((s) => (s.id === editData.id ? { ...updated, category_id: updated.category } : s)));
     } else {
-      setServices((prev) => [{ ...data, id: "s" + nextServiceId++, rating: 0, review_count: 0 }, ...prev]);
+      const created = await createService(payload);
+      if (created.error) { alert(created.error); return; }
+      setServices((prev) => [{ ...created, category_id: created.category }, ...prev]);
     }
     setModal(null);
     setEditData(null);
@@ -71,7 +79,6 @@ export default function AdminServicesPage() {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative max-w-xs flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -83,12 +90,11 @@ export default function AdminServicesPage() {
         </select>
       </div>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-soft">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              <th className="px-5 py-3">Icon</th>
+              <th className="px-5 py-3">Image</th>
               <th className="px-5 py-3">Title</th>
               <th className="px-5 py-3">Category</th>
               <th className="px-5 py-3">Price (BDT)</th>
@@ -104,7 +110,13 @@ export default function AdminServicesPage() {
             )}
             {filtered.map((s) => (
               <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="px-5 py-3 text-xl">{s.icon}</td>
+                <td className="px-5 py-3">
+                  {s.image_url ? (
+                    <img src={s.image_url} alt={s.title} className="h-10 w-10 rounded-lg object-cover" />
+                  ) : (
+                    <span className="text-xl">{s.icon || "📄"}</span>
+                  )}
+                </td>
                 <td className="px-5 py-3 font-medium">{s.title}</td>
                 <td className="px-5 py-3 text-gray-500">{getCategoryName(s.category_id)}</td>
                 <td className="px-5 py-3 font-semibold">{formatPrice(s.price)}</td>
@@ -139,7 +151,6 @@ export default function AdminServicesPage() {
         </table>
       </div>
 
-      {/* Service Modal */}
       {modal && (
         <ServiceModal
           data={editData}
@@ -149,7 +160,6 @@ export default function AdminServicesPage() {
         />
       )}
 
-      {/* Delete confirm */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-elevated">
@@ -167,21 +177,50 @@ export default function AdminServicesPage() {
 }
 
 function ServiceModal({ data, categories, onSave, onClose }) {
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [form, setForm] = useState({
     title: data?.title ?? "",
     subtitle: data?.subtitle ?? "",
     category_id: data?.category_id ?? categories[0]?.id ?? "",
     price: data?.price ?? "",
     duration: data?.duration ?? "",
-    icon: data?.icon ?? "🛠️",
     description: data?.description ?? "",
+    includes: Array.isArray(data?.includes) ? data.includes.join("\n") : "",
     is_popular: data?.is_popular ?? false,
     badge: data?.badge ?? "",
   });
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...form, price: Number(form.price) });
+    const payload = {
+      ...form,
+      price: Number(form.price),
+      includes: form.includes
+        ? form.includes.split("\n").map((s) => s.trim()).filter(Boolean)
+        : [],
+    };
+    if (imageFile) {
+      payload.image = imageFile;
+      payload.icon = "";
+    }
+    onSave(payload);
   };
 
   return (
@@ -215,13 +254,49 @@ function ServiceModal({ data, categories, onSave, onClose }) {
               <label className="mb-1 block text-sm font-medium text-gray-700">Duration</label>
               <input className="input-field" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Icon (emoji)</label>
-              <input className="input-field" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
+            <div className="col-span-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700">Service Image</label>
+              <div className="flex items-center gap-4">
+                {(imagePreview || data?.image_url) && (
+                  <div className="relative">
+                    <img
+                      src={imagePreview || data?.image_url}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-xl border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute -right-2 -top-2 rounded-full bg-red-500 p-0.5 text-white shadow"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                  <Upload className="h-4 w-4" />
+                  {imageFile ? imageFile.name : "Choose file"}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              <p className="mt-1 text-xs text-gray-400">Upload a service image (JPEG, PNG, WebP)</p>
             </div>
             <div className="col-span-2">
               <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
               <textarea className="input-field" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700">What's Include</label>
+              <textarea className="input-field" rows={4} value={form.includes}
+                onChange={(e) => setForm({ ...form, includes: e.target.value })}
+                placeholder={"Free consultation\n1 year warranty\nParts included"} />
+              <p className="mt-1 text-xs text-gray-400">Enter each item on a new line</p>
             </div>
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-gray-700">Is Popular</label>

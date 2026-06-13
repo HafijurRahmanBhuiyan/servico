@@ -1,9 +1,11 @@
+//Arman's Work
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, Briefcase, Clock, DollarSign, Shield } from "lucide-react";
 import { submitProviderApplication } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
+import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 
 const SKILLS = ["AC Repair & Servicing","Plumbing","Electrical Work","Home Cleaning","Beauty & Spa","Painting","Carpentry","Car Wash","Appliance Repair","Pest Control","Gardening","Laptop / Computer Repair"];
 
@@ -13,6 +15,7 @@ export default function BecomeProviderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", nid: "", address: "", experience_years: "1", skills: [], bio: "", availability: "full_time" });
   const [nidFile, setNidFile] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
 
   const toggleSkill = (s) =>
     setForm((f) => ({ ...f, skills: f.skills.includes(s) ? f.skills.filter((x) => x !== s) : [...f.skills, s] }));
@@ -22,7 +25,7 @@ export default function BecomeProviderPage() {
     if (form.skills.length === 0) { alert("Select at least one skill."); return; }
     if (!user) { navigate("/login?redirect=/become-provider"); return; }
     setSubmitting(true);
-    await submitProviderApplication({ userId: user.id, ...form, nid_file: nidFile });
+    await submitProviderApplication({ userId: user.id, ...form, nid_file: nidFile, profile_picture: profilePic });
     setSubmitting(false);
     refreshProviderApp();
     navigate("/provider/dashboard");
@@ -117,6 +120,7 @@ export default function BecomeProviderPage() {
             <textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })}
               placeholder="Tell us about your experience..." className="input-field resize-none" />
           </div>
+          <ProfilePictureUpload value={profilePic} onChange={setProfilePic} />
           <button disabled={submitting || !user} className="btn-primary w-full py-4 text-base">
             {submitting ? "Submitting..." : !user ? "Login to apply" : "Submit application"}
           </button>

@@ -13,7 +13,7 @@ class ProviderApplicationSerializer(serializers.ModelSerializer):
 class ProviderApplicationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProviderApplication
-        fields = ['full_name', 'phone', 'nid_number', 'address', 'experience_years', 'skills', 'bio', 'availability', 'nid_file']
+        fields = ['full_name', 'phone', 'nid_number', 'address', 'experience_years', 'skills', 'bio', 'availability', 'nid_file', 'avatar']
 
     def to_internal_value(self, data):
         if hasattr(data, 'dict'):
@@ -36,6 +36,11 @@ class AdminProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProviderApplication
         fields = '__all__'
+
+class ProviderPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProviderApplication
+        fields = ['id', 'full_name', 'phone', 'skills', 'experience_years', 'bio', 'availability', 'total_jobs', 'total_earnings', 'average_rating', 'avatar']
 
 class ProviderEarningSerializer(serializers.ModelSerializer):
     class Meta:

@@ -13,16 +13,18 @@ export default function ProviderEarningsPage() {
   const [data, setData] = useState(null);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => { fetchProviderEarnings("u2").then(setData); }, []);
+  useEffect(() => { fetchProviderEarnings().then(setData); }, []);
 
   if (!data) return null;
 
   const totalEarned = data.total_earned;
   const thisMonth = data.this_month;
-  const lastMonth = data.last_month;
+  const lastMonth = data.last_month ?? 0;
   const pendingPayout = data.pending_payout;
+  const transactions = data.transactions ?? [];
+  const weekly = data.weekly ?? [];
 
-  const maxWeek = Math.max(...data.weekly.map((w) => w.amount), 1);
+  const maxWeek = Math.max(...weekly.map((w) => w.amount), 1);
 
   const handlePayout = () => {
     setToast("Payout request submitted. Processed within 2 business days.");
@@ -102,7 +104,7 @@ export default function ProviderEarningsPage() {
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-soft">
         <h2 className="text-sm font-bold text-gray-900 mb-4">Weekly Earnings</h2>
         <div className="flex items-end justify-between gap-4 h-32">
-          {data.weekly.map((w) => (
+          {weekly.map((w) => (
             <div key={w.week_label} className="flex flex-col items-center gap-2 flex-1">
               <span className="text-xs font-semibold text-gray-700">{formatPrice(w.amount)}</span>
               <div
@@ -130,10 +132,10 @@ export default function ProviderEarningsPage() {
             </tr>
           </thead>
           <tbody>
-            {data.transactions.length === 0 && (
+            {transactions.length === 0 && (
               <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400">No transactions</td></tr>
             )}
-            {data.transactions.map((t) => (
+            {transactions.map((t) => (
               <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-5 py-3 font-mono text-xs text-gray-400">{t.booking_id}</td>
                 <td className="px-5 py-3 font-medium">{t.service}</td>

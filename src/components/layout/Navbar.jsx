@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, Briefcase } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,8 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isProvider, providerStatus } = useAuth();
+  const isApprovedProvider = isProvider || providerStatus === "approved";
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropOpen, setDropOpen] = useState(false);
@@ -47,10 +48,17 @@ export default function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/become-provider"
-            className="hidden sm:inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
-            Become a Pro
-          </Link>
+          {isApprovedProvider ? (
+            <Link to="/provider/dashboard"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+              <Briefcase className="h-4 w-4" /> Service Provider
+            </Link>
+          ) : (
+            <Link to="/become-provider"
+              className="hidden sm:inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+              Become a Pro
+            </Link>
+          )}
 
           {user ? (
             <div className="relative">
@@ -101,10 +109,17 @@ export default function Navbar() {
               {label}
             </NavLink>
           ))}
-          <Link to="/become-provider" onClick={() => setMobileOpen(false)}
-            className="block px-3 py-2.5 text-sm font-semibold text-emerald-700">
-            Become a Pro
-          </Link>
+          {isApprovedProvider ? (
+            <Link to="/provider/dashboard" onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-emerald-700">
+              <Briefcase className="h-4 w-4" /> Service Provider
+            </Link>
+          ) : (
+            <Link to="/become-provider" onClick={() => setMobileOpen(false)}
+              className="block px-3 py-2.5 text-sm font-semibold text-emerald-700">
+              Become a Pro
+            </Link>
+          )}
           {!user && (
             <Link to="/register" onClick={() => setMobileOpen(false)}
               className="mt-2 block btn-primary text-center py-2.5">

@@ -109,6 +109,53 @@ export async function fetchServiceReviews(serviceId) {
   return data.results || data;
 }
 
+function toFormData(data) {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(data)) {
+    if (v === undefined || v === null) continue;
+    if (k === 'includes' || k === 'gallery' || k === 'provider_stats') {
+      fd.append(k, JSON.stringify(v));
+    } else {
+      fd.append(k, v);
+    }
+  }
+  return fd;
+}
+
+function hasFile(data) {
+  return Object.values(data).some((v) => v instanceof File || v instanceof Blob);
+}
+
+export async function createService(data) {
+  const body = hasFile(data) ? toFormData(data) : JSON.stringify(data);
+  const res = await authFetch(`${BASE_URL}/services/`, {
+    method: 'POST',
+    body,
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
+}
+
+export async function updateService(id, data) {
+  const body = hasFile(data) ? toFormData(data) : JSON.stringify(data);
+  const res = await authFetch(`${BASE_URL}/services/${id}/`, {
+    method: 'PATCH',
+    body,
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
+}
+
+export async function deleteService(id) {
+  const res = await authFetch(`${BASE_URL}/services/${id}/`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) return { error: 'Delete failed' };
+  return {};
+}
+
 // ─── Promo Codes ──────────────────────────────────────────────────────────
 
 export async function validatePromoCode(code, orderTotal = 0) {
@@ -143,8 +190,9 @@ export async function fetchUserBookings() {
 // ─── Provider Application ─────────────────────────────────────────────────
 
 export async function submitProviderApplication(data) {
-  const hasFile = data.nid_file instanceof File;
-  const body = hasFile ? (() => {
+  const hasNid = data.nid_file instanceof File;
+  const hasPic = data.profile_picture instanceof File;
+  const body = (hasNid || hasPic) ? (() => {
     const fd = new FormData();
     fd.append('full_name', data.full_name);
     fd.append('phone', data.phone);
@@ -154,7 +202,8 @@ export async function submitProviderApplication(data) {
     fd.append('skills', JSON.stringify(data.skills));
     fd.append('bio', data.bio);
     fd.append('availability', data.availability);
-    fd.append('nid_file', data.nid_file);
+    if (hasNid) fd.append('nid_file', data.nid_file);
+    if (hasPic) fd.append('avatar', data.profile_picture);
     return fd;
   })() : JSON.stringify({
     full_name: data.full_name,
@@ -206,10 +255,42 @@ export async function initiateNagadPayment(bookingId) {
   return data;
 }
 
+export async function completePayment(bookingId, method, phone = "", status = "paid") {
+  const res = await authFetch(`${BASE_URL}/payments/complete/`, {
+    method: 'POST',
+    body: JSON.stringify({ booking_id: bookingId, method, phone, status }),
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.error || 'Payment completion failed' };
+  return data;
+}
+
 export async function fetchMyProviderApplication() {
   const res = await authFetch(`${BASE_URL}/provider/application/`);
   if (!res.ok) return null;
   return res.json();
+}
+
+export async function updateProviderApplication(data) {
+  const res = await authFetch(`${BASE_URL}/provider/application/`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
+}
+
+export async function updateProviderAvatar(file) {
+  const fd = new FormData();
+  fd.append('avatar', file);
+  const res = await authFetch(`${BASE_URL}/provider/application/`, {
+    method: 'PATCH',
+    body: fd,
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
 }
 
 // ─── Admin APIs ───────────────────────────────────────────────────────────
@@ -259,6 +340,26 @@ export async function fetchAdminBookings() {
   if (!res.ok) return [];
   const data = await res.json();
   return data.results || data;
+}
+
+export async function assignBookingProvider(bookingId, providerId) {
+  const res = await authFetch(`${BASE_URL}/admin/bookings/${bookingId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ provider: providerId, status: 'assigned' }),
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.error || data.detail || 'Failed to assign provider' };
+  return data;
+}
+
+export async function updateBookingStatus(bookingId, status) {
+  const res = await authFetch(`${BASE_URL}/admin/bookings/${bookingId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.error || data.detail || 'Failed to update status' };
+  return data;
 }
 
 export async function fetchMockPayments() {
@@ -323,8 +424,9 @@ export async function deletePromo(code) {
 
 export async function fetchProviderBookings() {
   const res = await authFetch(`${BASE_URL}/provider/jobs/`);
+  if (!res.ok) return [];
   const data = await res.json();
-  return data.results || data;
+  return Array.isArray(data) ? data : data.results || [];
 }
 
 export async function updateProviderBookingStatus(bookingId, status) {
@@ -337,10 +439,72 @@ export async function updateProviderBookingStatus(bookingId, status) {
 
 export async function fetchProviderEarnings() {
   const res = await authFetch(`${BASE_URL}/provider/earnings/`);
+  if (!res.ok) return null;
   return res.json();
 }
 
-export async function fetchProviderReviews() {
-  const res = await authFetch(`${BASE_URL}/services/`);
-  return [];
+export async function fetchProviderReviews(providerId) {
+  const res = await authFetch(`${BASE_URL}/providers/${providerId}/reviews/`);
+  const data = await res.json();
+  return data.results || data;
+}
+
+export async function fetchProviderProfile(providerId) {
+  const res = await fetch(`${BASE_URL}/providers/${providerId}/`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function submitReview(data) {
+  const res = await authFetch(`${BASE_URL}/reviews/`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
+}
+
+// ─── Chat / Messaging ─────────────────────────────────────────────────────
+
+export async function fetchMessages(bookingId) {
+  const res = await authFetch(`${BASE_URL}/chat/${bookingId}/messages/`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.results || data;
+}
+
+export async function sendMessage(bookingId, message) {
+  const res = await authFetch(`${BASE_URL}/chat/${bookingId}/messages/`, {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  });
+  return res.json();
+}
+
+export async function markMessagesRead(bookingId) {
+  await authFetch(`${BASE_URL}/chat/${bookingId}/mark-read/`, {
+    method: 'PATCH',
+  });
+}
+
+export async function fetchConversations() {
+  const res = await authFetch(`${BASE_URL}/chat/conversations/`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+// ─── Site Settings ─────────────────────────────────────────────────────────
+
+export async function fetchSiteSettings() {
+  const res = await authFetch(`${BASE_URL}/admin/settings/`);
+  return res.json();
+}
+
+export async function updateSiteSettings(data) {
+  const res = await authFetch(`${BASE_URL}/admin/settings/`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+  return res.json();
 }

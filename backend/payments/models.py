@@ -25,6 +25,7 @@ class Payment(models.Model):
     gateway_payment_id = models.CharField(max_length=100, blank=True)   # bKash paymentID or Nagad order ID
     gateway_transaction_id = models.CharField(max_length=100, blank=True)
     gateway_response = models.JSONField(default=dict, blank=True)       # raw response stored for audit
+    merchant_account = models.CharField(max_length=50, blank=True, default='')  # account the payment was sent to
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
