@@ -64,31 +64,15 @@ function Layout({ children }) {
 
 function AdminProtectedRoute({ children }) {
   const { isAdmin } = useAuth();
-  if (!isAdmin) {
-    try {
-      const stored = JSON.parse(localStorage.getItem("servico_user") || "null");
-      if (stored?.role === "admin") return children;
-    } catch {}
-    return <Navigate to="/admin/login" replace />;
-  }
+  if (!isAdmin) return <Navigate to="/admin/login" replace />;
   return children;
 }
 
 function ProviderProtectedRoute({ children }) {
   const { user, isProvider, providerApplication } = useAuth();
   const hasApplication = !!providerApplication;
-  if (!user) {
-    try {
-      const stored = JSON.parse(localStorage.getItem("servico_user") || "null");
-      if (stored?.role === "provider") return children;
-    } catch {}
-    return <Navigate to="/login?redirect=/provider/dashboard" replace />;
-  }
+  if (!user) return <Navigate to="/login?redirect=/provider/dashboard" replace />;
   if (isProvider || hasApplication) return children;
-  try {
-    const stored = JSON.parse(localStorage.getItem("servico_user") || "null");
-    if (stored?.role === "provider") return children;
-  } catch {}
   return <Navigate to="/become-provider" replace />;
 }
 

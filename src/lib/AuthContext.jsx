@@ -4,20 +4,7 @@ import { apiLogin, apiRegister, fetchMyProviderApplication } from "@/lib/api";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("servico_user"));
-      if (u && u.status === "suspended") {
-        localStorage.removeItem("servico_user");
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        return null;
-      }
-      return u;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
 
   // ── signIn ──────────────────────────────────────────────────────────────────
   const signIn = async (email, password) => {
