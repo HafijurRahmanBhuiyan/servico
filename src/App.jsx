@@ -29,6 +29,7 @@ import AdminBookingsPage from "@/pages/admin/AdminBookingsPage";
 import AdminReviewsPage from "@/pages/admin/AdminReviewsPage";
 import AdminPaymentsPage from "@/pages/admin/AdminPaymentsPage";
 import AdminPromosPage from "@/pages/admin/AdminPromosPage";
+import AdminSupportPage from "@/pages/admin/AdminSupportPage";
 import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
 
 // Provider pages
@@ -106,6 +107,7 @@ export default function App() {
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="reviews" element={<AdminReviewsPage />} />
             <Route path="payments" element={<AdminPaymentsPage />} />
+            <Route path="support" element={<AdminSupportPage />} />
             <Route path="promos" element={<AdminPromosPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
           </Route>

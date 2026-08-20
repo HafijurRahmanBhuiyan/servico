@@ -33,7 +33,7 @@ export default function ServicesPage() {
     let out = [...services];
     if (cat) {
       const cId = categories.find((c) => c.slug === cat)?.id;
-      if (cId) out = out.filter((s) => s.category_id === cId);
+      if (cId) out = out.filter((s) => s.category === cId);
     }
     if (q.trim()) {
       const t = q.toLowerCase();

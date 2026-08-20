@@ -6,6 +6,7 @@ export default function RegisterPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect") ?? "/";
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "", referralCode: searchParams.get("ref") ?? "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,7 +19,7 @@ export default function RegisterPage() {
     const { error: err } = await signUp(form.email, form.password, form.fullName, form.phone);
     setLoading(false);
     if (err) { setError(err); return; }
-    navigate("/");
+    navigate(redirect);
   };
 
   return (

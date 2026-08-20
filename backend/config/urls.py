@@ -14,6 +14,7 @@ urlpatterns = [
         path('', include('reviews.urls')),
         path('', include('chat.urls')),
         path('', include('promos.urls')),
+        path('', include('support.urls')),
         path('admin/', include('admin_dashboard.urls')),
     ])),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

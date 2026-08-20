@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'promos',
     'chat',
     'admin_dashboard',
+    'support',
 ]
 
 MIDDLEWARE = [

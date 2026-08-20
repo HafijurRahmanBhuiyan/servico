@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, BarChart2, Users, Briefcase, Star, Wrench, Grid,
-  Calendar, Receipt, Settings, Bell, LogOut, Menu, X,
+  Calendar, Receipt, Settings, Bell, LogOut, Menu, X, MessageSquare,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -40,6 +40,7 @@ const NAV_SECTIONS = [
   {
     label: "SYSTEM",
     items: [
+      { label: "Support", icon: MessageSquare, path: "/admin/support" },
       { label: "Site Settings", icon: Settings, path: "/admin/settings" },
     ],
   },
@@ -54,6 +55,7 @@ const BREADCRUMB_MAP = {
   "/admin/categories": "Categories",
   "/admin/bookings": "Bookings",
   "/admin/payments": "Transactions",
+  "/admin/support": "Support Messages",
   "/admin/promos": "Promo Codes",
   "/admin/settings": "Site Settings",
 };

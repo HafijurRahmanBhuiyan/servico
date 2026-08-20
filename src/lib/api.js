@@ -508,3 +508,42 @@ export async function updateSiteSettings(data) {
   });
   return res.json();
 }
+
+// ─── Support Messages ─────────────────────────────────────────────────────
+
+export async function sendSupportMessage(subject, message) {
+  const res = await authFetch(`${BASE_URL}/support/messages/`, {
+    method: 'POST',
+    body: JSON.stringify({ subject, message }),
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.detail || Object.values(data).flat().join(' ') };
+  return { error: null };
+}
+
+export async function fetchSupportMessages() {
+  const res = await authFetch(`${BASE_URL}/admin/support/`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.results || data;
+}
+
+export async function fetchSupportMessage(id) {
+  const res = await authFetch(`${BASE_URL}/admin/support/${id}/`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function replyToSupportMessage(id, adminReply, status = 'replied') {
+  const res = await authFetch(`${BASE_URL}/admin/support/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ admin_reply: adminReply, status }),
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.detail || 'Failed to send reply' };
+  return { error: null, message: data };
+}
+
+export async function deleteSupportMessage(id) {
+  await authFetch(`${BASE_URL}/admin/support/${id}/`, { method: 'DELETE' });
+}
