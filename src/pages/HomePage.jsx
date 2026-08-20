@@ -92,16 +92,23 @@ export default function HomePage() {
 
             {/* Category quick-links */}
             <div className="hidden grid-cols-3 gap-3 lg:grid">
-              {["🧹 Cleaning", "❄️ AC Repair", "💆 Beauty", "⚡ Electrical", "🔧 Plumbing", "📷 CCTV", "📦 Moving", "💈 Grooming", "🌿 Gardening"].map((e, i) => {
-                const [icon, ...rest] = e.split(" ");
-                return (
-                  <div key={i} className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 text-3xl backdrop-blur-sm transition hover:bg-white/20 cursor-pointer"
-                    onClick={() => navigate(`/services?q=${encodeURIComponent(rest.join(" "))}`)}>
-                    <span>{icon}</span>
-                    <span className="text-xs font-medium text-white/80">{rest.join(" ")}</span>
+              {[
+                { icon: "🧹", label: "Cleaning", slug: "cleaning" },
+                { icon: "❄️", label: "AC Repair", slug: "ac-repair" },
+                { icon: "💆", label: "Beauty", slug: "beauty" },
+                { icon: "⚡", label: "Electrical", slug: "electrical" },
+                { icon: "🔧", label: "Plumbing", slug: "plumbing" },
+                { icon: "📷", label: "CCTV", slug: "security" },
+                { icon: "📦", label: "Moving", slug: "moving" },
+                { icon: "💈", label: "Grooming", slug: "men-grooming" },
+                { icon: "🌿", label: "Gardening", slug: "gardening" },
+              ].map((item) => (
+                  <div key={item.slug} className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 text-3xl backdrop-blur-sm transition hover:bg-white/20 cursor-pointer"
+                    onClick={() => navigate(`/category/${item.slug}`)}>
+                    <span>{item.icon}</span>
+                    <span className="text-xs font-medium text-white/80">{item.label}</span>
                   </div>
-                );
-              })}
+                ))}
             </div>
           </div>
         </div>
