@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = 'https://servico-backend-0vdn.onrender.com/api';
 
 // ─── Auth token helpers ────────────────────────────────────────────────────
 
