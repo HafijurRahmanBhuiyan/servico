@@ -6,6 +6,7 @@ import { Calendar, Clock, MapPin, Phone, Zap, X, Smartphone, Landmark } from "lu
 import { fetchServiceById, createBooking, initiateBkashPayment, initiateNagadPayment, completePayment } from "@/lib/api";
 import { formatPrice, cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
+import PasswordInput from "@/components/PasswordInput";
 
 const PAYMENT_METHODS = [
   { id: "cash", label: "Cash on delivery", icon: "💵" },
@@ -303,9 +304,8 @@ export default function BookingPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">bKash PIN</label>
-                  <input type="password" placeholder="Enter your PIN" value={bkashPin} maxLength={20}
-                    onChange={(e) => { setBkashPin(e.target.value); setBkashError(""); }}
-                    className="input-field" />
+                  <PasswordInput placeholder="Enter your PIN" value={bkashPin} maxLength={20}
+                    onChange={(e) => { setBkashPin(e.target.value); setBkashError(""); }} />
                 </div>
                 {bkashError && (
                   <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{bkashError}</div>
@@ -377,9 +377,8 @@ export default function BookingPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Nagad PIN</label>
-                  <input type="password" placeholder="Enter your PIN" value={nagadPin} maxLength={20}
-                    onChange={(e) => { setNagadPin(e.target.value); setNagadError(""); }}
-                    className="input-field" />
+                  <PasswordInput placeholder="Enter your PIN" value={nagadPin} maxLength={20}
+                    onChange={(e) => { setNagadPin(e.target.value); setNagadError(""); }} />
                 </div>
                 {nagadError && (
                   <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{nagadError}</div>

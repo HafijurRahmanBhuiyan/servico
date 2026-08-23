@@ -1,4 +1,4 @@
-const BASE_URL = 'https://servico-backend-0vdn.onrender.com/api';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // ─── Auth token helpers ────────────────────────────────────────────────────
 

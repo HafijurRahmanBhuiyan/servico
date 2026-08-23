@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 data.json
+local_backup.sql
+
+# Local environment config
+.env

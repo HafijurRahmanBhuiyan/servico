@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -44,7 +45,7 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Password</label>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="input-field" />
+            <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button disabled={loading} className="btn-primary w-full py-3">

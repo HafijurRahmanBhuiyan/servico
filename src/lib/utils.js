@@ -12,7 +12,7 @@ export function formatNum(n) {
   return String(n);
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_MEDIA_URL || 'http://localhost:8000';
 
 export function getAvatarUrl(path) {
   if (!path) return null;

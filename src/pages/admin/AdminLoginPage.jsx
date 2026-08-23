@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { LogIn } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function AdminLoginPage() {
   const { user, signIn, isAdmin } = useAuth();
@@ -61,9 +62,7 @@ export default function AdminLoginPage() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              className="input-field"
+            <PasswordInput
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

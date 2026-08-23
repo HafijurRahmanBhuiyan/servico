@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Save, Bell, Wallet, Shield, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PasswordInput from "@/components/PasswordInput";
 
 function Toast({ message, onClose }) {
   setTimeout(onClose, 3000);
@@ -110,16 +111,16 @@ export default function ProviderSettingsPage() {
         <div className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Current Password</label>
-            <input type="password" className="input-field" value={password.current} onChange={(e) => setPassword({ ...password, current: e.target.value })} />
+            <PasswordInput value={password.current} onChange={(e) => setPassword({ ...password, current: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">New Password</label>
-              <input type="password" className="input-field" value={password.new} onChange={(e) => setPassword({ ...password, new: e.target.value })} />
+              <PasswordInput value={password.new} onChange={(e) => setPassword({ ...password, new: e.target.value })} />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Confirm Password</label>
-              <input type="password" className="input-field" value={password.confirm} onChange={(e) => setPassword({ ...password, confirm: e.target.value })} />
+              <PasswordInput value={password.confirm} onChange={(e) => setPassword({ ...password, confirm: e.target.value })} />
             </div>
           </div>
           <button onClick={() => showToast("Password updated!")} className="btn-primary">

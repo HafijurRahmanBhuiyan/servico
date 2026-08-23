@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { apiLogin, apiRegister, fetchMyProviderApplication } from "@/lib/api";
+import { apiLogin, apiRegister, fetchMyProviderApplication, BASE_URL } from "@/lib/api";
 
 const AuthContext = createContext(null);
 
@@ -69,7 +69,7 @@ export function AuthProvider({ children }) {
   // ── changeAdminPassword ─────────────────────────────────────────────────────
   const changeAdminPassword = async (currentPassword, newPassword) => {
     const token = localStorage.getItem("access_token");
-    const res = await fetch("http://localhost:8000/api/me/change-password/", {
+    const res = await fetch(`${BASE_URL}/me/change-password/`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),

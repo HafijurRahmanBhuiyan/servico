@@ -67,7 +67,7 @@ function Sidebar({ mobileOpen, setMobileOpen }) {
   const handleSignOut = () => {
     signOut();
     setMobileOpen(false);
-    navigate("/admin/login");
+    navigate("/");
   };
 
   return (
