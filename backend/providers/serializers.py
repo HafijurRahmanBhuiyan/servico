@@ -38,6 +38,10 @@ class ProviderApplicationCreateSerializer(serializers.ModelSerializer):
                 pass
         return super().to_internal_value(data)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return absolute_file_urls(instance, data, self.context.get('request'), ['avatar', 'nid_file'])
+
     def create(self, validated_data):
         user = self.context['request'].user
         application = ProviderApplication.objects.create(user=user, **validated_data)

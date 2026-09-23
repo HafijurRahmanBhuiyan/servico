@@ -15,7 +15,7 @@ class ProviderApplicationView(APIView):
     def get(self, request):
         try:
             app = request.user.provider_application
-            return Response(ProviderApplicationSerializer(app).data)
+            return Response(ProviderApplicationSerializer(app, context={'request': request}).data)
         except ProviderApplication.DoesNotExist:
             return Response({'detail': 'No application found'}, status=404)
 
@@ -33,7 +33,7 @@ class ProviderApplicationView(APIView):
             app = request.user.provider_application
         except ProviderApplication.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
-        serializer = ProviderApplicationCreateSerializer(app, data=request.data, partial=True)
+        serializer = ProviderApplicationCreateSerializer(app, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -53,7 +53,7 @@ class AdminProviderDetailView(APIView):
             app = ProviderApplication.objects.get(pk=pk)
         except ProviderApplication.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
-        return Response(AdminProviderSerializer(app).data)
+        return Response(AdminProviderSerializer(app, context={'request': request}).data)
 
     def patch(self, request, pk):
         try:
@@ -71,7 +71,7 @@ class AdminProviderDetailView(APIView):
             app.user.role = 'provider'
             app.user.save()
         app.save()
-        return Response(AdminProviderSerializer(app).data)
+        return Response(AdminProviderSerializer(app, context={'request': request}).data)
 
 class ProviderPublicDetailView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -81,7 +81,7 @@ class ProviderPublicDetailView(APIView):
             app = ProviderApplication.objects.get(pk=pk, status='approved')
         except ProviderApplication.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
-        return Response(ProviderPublicSerializer(app).data)
+        return Response(ProviderPublicSerializer(app, context={'request': request}).data)
 
 class ProviderEarningsView(APIView):
     permission_classes = [IsProvider]
