@@ -12,10 +12,24 @@ export function formatNum(n) {
   return String(n);
 }
 
-const API_BASE = import.meta.env.VITE_MEDIA_URL || 'http://localhost:8000';
+import { BASE_URL } from "@/lib/api";
+
+const MEDIA_BASE =
+  import.meta.env.VITE_MEDIA_URL ||
+  (() => {
+    try {
+      return new URL(BASE_URL).origin;
+    } catch {
+      return "http://localhost:8000";
+    }
+  })();
+
+export function resolveMediaUrl(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${String(MEDIA_BASE).replace(/\/+$/, "")}${path.startsWith("/") ? "" : "/"}${path}`;
+}
 
 export function getAvatarUrl(path) {
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+  return resolveMediaUrl(path);
 }

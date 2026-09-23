@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, X, Pencil, Trash2 } from "lucide-react";
-import { fetchCategories, fetchServices } from "@/lib/api";
-
-let nextCatId = 100;
+import { fetchCategories, fetchServices, createCategory, updateCategory, deleteCategory } from "@/lib/api";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -11,25 +9,32 @@ export default function AdminCategoriesPage() {
   const [services, setServices] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
 
+  const reloadCategories = () => fetchCategories().then(setCategories);
+
   useEffect(() => {
-    fetchCategories().then(setCategories);
+    reloadCategories();
     fetchServices().then(setServices);
   }, []);
 
   const getServiceCount = (catId) => services.filter((s) => s.category === catId).length;
 
-  const handleSave = (data) => {
+  const handleSave = async (data) => {
     if (editData) {
-      setCategories((prev) => prev.map((c) => (c.id === editData.id ? { ...c, ...data } : c)));
+      const updated = await updateCategory(editData.slug, data);
+      if (updated.error) { alert(updated.error); return; }
     } else {
-      setCategories((prev) => [...prev, { id: "c" + nextCatId++, ...data, image_url: "" }]);
+      const created = await createCategory(data);
+      if (created.error) { alert(created.error); return; }
     }
+    await reloadCategories();
     setModal(null);
     setEditData(null);
   };
 
-  const handleDelete = (id) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+  const handleDelete = async (cat) => {
+    const res = await deleteCategory(cat.slug);
+    if (res.error) { alert(res.error); return; }
+    await reloadCategories();
     setDeleteId(null);
   };
 
@@ -58,7 +63,7 @@ export default function AdminCategoriesPage() {
               <button onClick={() => { setEditData(c); setModal("edit"); }} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-primary">
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button onClick={() => setDeleteId(c.id)} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500">
+              <button onClick={() => setDeleteId(c)} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>

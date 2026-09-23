@@ -2,6 +2,14 @@ from rest_framework import serializers
 from .models import ProviderApplication, ProviderEarning
 from users.serializers import UserSerializer
 
+def absolute_file_urls(instance, data, request, fields):
+    for field in fields:
+        value = getattr(instance, field, None)
+        if value:
+            url = value.url
+            data[field] = request.build_absolute_uri(url) if request else url
+    return data
+
 class ProviderApplicationSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
@@ -9,6 +17,10 @@ class ProviderApplicationSerializer(serializers.ModelSerializer):
         model = ProviderApplication
         fields = '__all__'
         read_only_fields = ['user', 'status', 'applied_at', 'total_jobs', 'total_earnings', 'average_rating']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return absolute_file_urls(instance, data, self.context.get('request'), ['avatar', 'nid_file'])
 
 class ProviderApplicationCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,10 +49,18 @@ class AdminProviderSerializer(serializers.ModelSerializer):
         model = ProviderApplication
         fields = '__all__'
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return absolute_file_urls(instance, data, self.context.get('request'), ['avatar', 'nid_file'])
+
 class ProviderPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProviderApplication
         fields = ['id', 'full_name', 'phone', 'skills', 'experience_years', 'bio', 'availability', 'total_jobs', 'total_earnings', 'average_rating', 'avatar']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return absolute_file_urls(instance, data, self.context.get('request'), ['avatar'])
 
 class ProviderEarningSerializer(serializers.ModelSerializer):
     class Meta:

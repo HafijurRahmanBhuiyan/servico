@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, X, Star, Briefcase, MapPin, Phone, Mail, Award, Clock, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, resolveMediaUrl } from "@/lib/utils";
 import { fetchProviderApplications, updateProviderStatus } from "@/lib/api";
 import ProviderAvatar from "@/components/ProviderAvatar";
 
@@ -157,7 +157,7 @@ export default function AdminProvidersPage() {
                         Reject
                       </button>
                       {app.nid_file ? (
-                        <a href={app.nid_file} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary underline">
+                        <a href={resolveMediaUrl(app.nid_file)} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary underline">
                           View NID
                         </a>
                       ) : (
@@ -286,7 +286,7 @@ export default function AdminProvidersPage() {
               <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
                 <span>Applied: {app.applied_at}</span>
                 {app.nid_file && (
-                  <a href={app.nid_file} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">View NID Document</a>
+                  <a href={resolveMediaUrl(app.nid_file)} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">View NID Document</a>
                 )}
               </div>
 

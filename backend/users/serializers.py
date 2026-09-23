@@ -8,6 +8,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'full_name', 'phone', 'role', 'status', 'avatar', 'referral_code', 'date_joined']
         read_only_fields = ['id', 'role', 'date_joined']
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.avatar:
+            url = instance.avatar.url
+            data['avatar'] = self.context.get('request').build_absolute_uri(url) if self.context.get('request') else url
+        return data
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     referral_code_used = serializers.CharField(write_only=True, required=False, allow_blank=True)

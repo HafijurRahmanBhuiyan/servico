@@ -86,6 +86,34 @@ export async function fetchCategories() {
   return data.results || data;
 }
 
+export async function createCategory(data) {
+  const res = await authFetch(`${BASE_URL}/categories/`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
+}
+
+export async function updateCategory(slug, data) {
+  const res = await authFetch(`${BASE_URL}/categories/${slug}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) return { error: Object.values(json).flat().join(' ') };
+  return json;
+}
+
+export async function deleteCategory(slug) {
+  const res = await authFetch(`${BASE_URL}/categories/${slug}/`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) return { error: 'Delete failed' };
+  return {};
+}
+
 // ─── Services ─────────────────────────────────────────────────────────────
 
 export async function fetchServices({ popular, categorySlug } = {}) {
