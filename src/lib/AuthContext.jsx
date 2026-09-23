@@ -4,7 +4,14 @@ import { apiLogin, apiRegister, fetchMyProviderApplication, BASE_URL } from "@/l
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem("servico_user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // ── signIn ──────────────────────────────────────────────────────────────────
   const signIn = async (email, password) => {

@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/hafijurrahman/Documents/Projects/git-clone/Online-Service-Portal-FNF-Planet/backend/venv"
+VIRTUAL_ENV="/Users/hafijurrahman/Documents/Projects/servico/backend/venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
